@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { Briefcase, Megaphone, Sparkles, Gift, ChevronRight } from 'lucide-react';
-import { MOCK_CATEGORIES } from '../data/mockData';
+import { useCatalog } from '../context/CatalogContext';
 
 const iconMap: Record<string, React.ReactNode> = {
   Briefcase: <Briefcase className="w-6 h-6 sm:w-7 sm:h-7" />,
@@ -20,6 +20,7 @@ const categoryColors = [
 ];
 
 export const CategoryQuickAccess: React.FC = () => {
+  const { categories, loadingCatalog } = useCatalog();
   const barRef = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
@@ -42,46 +43,49 @@ export const CategoryQuickAccess: React.FC = () => {
         </p>
 
         {/* 4-Column grid — all visible at once */}
-        <div ref={barRef} className="grid grid-cols-4 gap-2 sm:gap-4">
-          {MOCK_CATEGORIES.map((cat, idx) => {
-            const color = categoryColors[idx];
-            return (
-              <Link
-                key={cat.id}
-                to={`/subcategories?catId=${cat.id}`}
-                className={`cat-card group relative flex flex-col items-center text-center gap-1.5 sm:gap-2.5 p-2.5 sm:p-4 rounded-2xl border ${color.border} bg-white hover:bg-slate-50 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md ${color.glow} overflow-hidden`}
-              >
-                {/* Coloured glow blob in background */}
-                <div className={`absolute -bottom-3 -right-3 w-16 h-16 rounded-full ${color.bg} opacity-5 group-hover:opacity-10 transition-opacity`} />
+        {loadingCatalog ? (
+          <div className="grid grid-cols-4 gap-2 sm:gap-4 animate-pulse">
+            {[1, 2, 3, 4].map(n => (
+              <div key={n} className="h-24 sm:h-32 bg-slate-200 rounded-2xl"></div>
+            ))}
+          </div>
+        ) : (
+          <div ref={barRef} className="grid grid-cols-4 gap-2 sm:gap-4">
+            {categories.slice(0, 4).map((cat, idx) => {
+              const color = categoryColors[idx % categoryColors.length];
+              return (
+                <Link
+                  key={cat.id}
+                  to={`/subcategories?catId=${cat.id}`}
+                  className={`cat-card group relative flex flex-col items-center text-center gap-1.5 sm:gap-2.5 p-2.5 sm:p-4 rounded-2xl border ${color.border} bg-white hover:bg-slate-50 active:scale-95 transition-all duration-200 shadow-sm hover:shadow-md ${color.glow} overflow-hidden`}
+                >
+                  <div className={`absolute -bottom-3 -right-3 w-16 h-16 rounded-full ${color.bg} opacity-5 group-hover:opacity-10 transition-opacity`} />
 
-                {/* Icon */}
-                <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${color.iconBg} ${color.text} flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}>
-                  {iconMap[cat.iconName]}
-                </div>
+                  <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${color.iconBg} ${color.text} flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-110`}>
+                    {iconMap[cat.iconName || 'Briefcase'] || <Briefcase className="w-6 h-6 sm:w-7 sm:h-7" />}
+                  </div>
 
-                {/* Label */}
-                <div className="space-y-0.5">
-                  {/* Short label for mobile, full for desktop */}
-                  <p className={`font-extrabold text-[10px] sm:hidden text-slate-800 leading-tight line-clamp-2`}>
-                    {cat.name.split('&')[0].trim().split(' ').slice(0, 2).join(' ')}
-                  </p>
-                  <p className={`hidden sm:block font-extrabold text-xs sm:text-sm text-slate-800 leading-tight`}>
-                    {cat.name}
-                  </p>
-                  <p className="hidden sm:block text-[10px] text-slate-500 font-medium">
-                    {cat.productCount}+ Products
-                  </p>
-                </div>
+                  <div className="space-y-0.5">
+                    <p className={`font-extrabold text-[10px] sm:hidden text-slate-800 leading-tight line-clamp-2`}>
+                      {cat.name.split('&')[0].trim().split(' ').slice(0, 2).join(' ')}
+                    </p>
+                    <p className={`hidden sm:block font-extrabold text-xs sm:text-sm text-slate-800 leading-tight`}>
+                      {cat.name}
+                    </p>
+                    <p className="hidden sm:block text-[10px] text-slate-500 font-medium">
+                      Explore
+                    </p>
+                  </div>
 
-                {/* Arrow hint on desktop */}
-                <div className={`hidden sm:flex items-center space-x-1 text-[11px] font-bold ${color.text} opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all`}>
-                  <span>Explore</span>
-                  <ChevronRight className="w-3 h-3" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+                  <div className={`hidden sm:flex items-center space-x-1 text-[11px] font-bold ${color.text} opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all`}>
+                    <span>Explore</span>
+                    <ChevronRight className="w-3 h-3" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

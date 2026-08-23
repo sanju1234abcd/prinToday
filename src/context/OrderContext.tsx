@@ -1,84 +1,128 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Order, Product, ShippingAddress, CartItem } from '../types';
-import { MOCK_ORDERS, MOCK_PRODUCTS } from '../data/mockData';
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 
 interface OrderContextType {
   orders: Order[];
-  products: Product[];
-  placeOrder: (shippingAddress: ShippingAddress, items: CartItem[], paymentMethod: string) => Order;
-  updateOrderStatus: (orderId: string, newStatus: Order['status']) => void;
-  addProduct: (newProduct: Product) => void;
-  updateProduct: (updatedProduct: Product) => void;
+  loadingOrders: boolean;
+  placeOrder: (shippingAddress: ShippingAddress, items: CartItem[], paymentMethod: string) => Promise<Order>;
+  updateOrderStatus: (orderId: string, newStatus: Order['status'], expectedDate?: string) => Promise<void>;
+  fetchAdminOrders: () => Promise<Order[]>;
+  refreshOrders: () => Promise<void>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
 const ORDERS_KEY = 'printoday_orders';
-const PRODUCTS_KEY = 'printoday_products';
 
 export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [orders, setOrders] = useState<Order[]>(() => {
-    try {
-      const saved = localStorage.getItem(ORDERS_KEY);
-      return saved ? JSON.parse(saved) : MOCK_ORDERS;
-    } catch {
-      return MOCK_ORDERS;
-    }
-  });
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
-  const [products, setProducts] = useState<Product[]>(() => {
+  const refreshOrders = useCallback(async () => {
+    setLoadingOrders(true);
     try {
-      const saved = localStorage.getItem(PRODUCTS_KEY);
-      return saved ? JSON.parse(saved) : MOCK_PRODUCTS;
-    } catch {
-      return MOCK_PRODUCTS;
+      const res = await fetch(`${API}/orders/my-orders`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const normalized = (data.data || []).map((o: any) => ({ ...o, id: o._id || o.id }));
+        setOrders(normalized);
+      }
+    } catch (err) {
+      console.error('Failed to fetch orders', err);
+    } finally {
+      setLoadingOrders(false);
     }
-  });
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-  }, [orders]);
+    refreshOrders();
+  }, [refreshOrders]);
 
-  useEffect(() => {
-    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
-  }, [products]);
 
-  const placeOrder = (shippingAddress: ShippingAddress, items: CartItem[], paymentMethod: string): Order => {
-    const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
-    const gstAmount = subtotal * 0.18;
-    const shippingFee = subtotal > 999 ? 0 : 99;
-    const totalAmount = subtotal + gstAmount + shippingFee;
 
-    const newOrder: Order = {
-      id: `ORD-${Math.floor(10000 + Math.random() * 90000)}`,
-      shippingAddress,
-      items,
-      subtotal,
-      gstAmount,
-      shippingFee,
-      totalAmount,
-      status: 'Pending',
-      createdAt: new Date().toISOString(),
-      paymentMethod
+  const placeOrder = async (shippingAddress: ShippingAddress, items: CartItem[], paymentMethod: string): Promise<Order> => {
+    // Build complete API-compatible items array
+    const apiItems = items.map(item => {
+      const widthFt = item.customDimensions
+        ? (item.customDimensions.unit === 'ft'
+          ? item.customDimensions.width
+          : item.customDimensions.width / 12)
+        : undefined;
+      const heightFt = item.customDimensions
+        ? (item.customDimensions.unit === 'ft'
+          ? item.customDimensions.height
+          : item.customDimensions.height / 12)
+        : undefined;
+
+      return {
+        productId: item.product._id || item.product.id,
+        quantity: item.quantity,
+        calculatedUnitPrice: item.unitPrice,
+        widthFt,
+        heightFt,
+        totalSqFt: item.customDimensions?.totalSqFt,
+        artworkUrl: item.artworkFile?.previewUrl || null,
+        appliedTier: null // We don't track the exact tier object locally currently, but the backend recalculates it. If required, we can pass it.
+      };
+    });
+
+    // Build backend shipping address from the unified ShippingAddress type
+    const backendShippingAddress = {
+      houseNo: shippingAddress.houseNo,
+      buildingName: shippingAddress.buildingName,
+      streetName: shippingAddress.streetName,
+      area: shippingAddress.area,
+      pin: shippingAddress.pin
     };
 
+    const res = await fetch(`${API}/orders/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        items: apiItems,
+        shippingAddress: backendShippingAddress,
+        paymentMethod,
+        customerName: shippingAddress.fullName,
+        customerEmail: shippingAddress.email,
+        customerPhone: shippingAddress.phone,
+        gstin: shippingAddress.gstin
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Checkout failed');
+    }
+
+    const newOrder: Order = { ...data.data, id: data.data._id };
     setOrders(prev => [newOrder, ...prev]);
     return newOrder;
   };
 
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
+  const fetchAdminOrders = async (): Promise<Order[]> => {
+    const res = await fetch(`${API}/admin/orders`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to fetch admin orders');
+    const data = await res.json();
+    return (data.data || []).map((o: any) => ({ ...o, id: o._id || o.id }));
+  };
+
+  const updateOrderStatus = async (orderId: string, newStatus: Order['status'], expectedDate?: string): Promise<void> => {
+    const res = await fetch(`${API}/admin/orders/${orderId}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ orderStatus: newStatus, expectedDate }),
+    });
+    
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Failed to update status');
+    }
+
     setOrders(prev =>
       prev.map(ord => (ord.id === orderId ? { ...ord, status: newStatus } : ord))
-    );
-  };
-
-  const addProduct = (newProduct: Product) => {
-    setProducts(prev => [newProduct, ...prev]);
-  };
-
-  const updateProduct = (updatedProduct: Product) => {
-    setProducts(prev =>
-      prev.map(p => (p.id === updatedProduct.id ? updatedProduct : p))
     );
   };
 
@@ -86,11 +130,11 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <OrderContext.Provider
       value={{
         orders,
-        products,
+        loadingOrders,
         placeOrder,
         updateOrderStatus,
-        addProduct,
-        updateProduct
+        fetchAdminOrders,
+        refreshOrders
       }}
     >
       {children}

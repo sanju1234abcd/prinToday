@@ -17,6 +17,23 @@ export interface Subcategory {
   image: string;
 }
 
+export type QuantityMode = 'CUSTOM_INTERVAL' | 'PRESET_ONLY' | 'ANY_QUANTITY';
+export type DiscountType = 'PERCENTAGE' | 'FLAT';
+
+export interface DiscountTier {
+  minQty: number;
+  maxQty: number | null;
+  discountType: DiscountType;
+  discountValue: number;
+}
+
+export interface QuantityConfig {
+  quantityMode: QuantityMode;
+  minQuantity: number;
+  quantityStep: number;
+  presetOptions?: number[];
+}
+
 export interface VariantOptionItem {
   label: string;
   extraPrice?: number;
@@ -35,11 +52,13 @@ export interface ProductRequirementConfig {
   dimensionUnit?: 'ft' | 'in';
   defaultWidth?: number;
   defaultHeight?: number;
+  minSqFt?: number;
   variantOptions?: VariantOption[];
 }
 
 export interface Product {
   id: string;
+  _id?: string;
   categoryId: string;
   subcategoryId: string;
   title: string;
@@ -49,8 +68,11 @@ export interface Product {
   pricingType: 'fixed' | 'per_sqft';
   minQuantity: number;
   quantityPresets: number[];
+  quantityConfig?: QuantityConfig;
+  discountTiers?: DiscountTier[];
   requirements: ProductRequirementConfig;
   thumbnail: string;
+  images?: string[];
   badges: string[];
   rating: number;
   reviewsCount: number;
@@ -83,21 +105,43 @@ export interface ShippingAddress {
   email: string;
   phone: string;
   gstin?: string;
-  addressLine: string;
-  city: string;
-  state: string;
-  pincode: string;
+  houseNo: string;
+  buildingName?: string;
+  streetName: string;
+  area: string;
+  state?: string;
+  pin: string;
 }
 
 export interface Order {
   id: string;
+  _id?: string;
+  orderNumber?: string;
+  userId?: {
+    email: string;
+    mobileNumber?: string;
+    accountType: 'INDIVIDUAL' | 'ORGANIZATION';
+    individual?: {
+      name: string;
+    };
+    organization?: {
+      creditEligible: boolean;
+      companyName: string;
+      contactName?: string;
+    };
+  };
   shippingAddress: ShippingAddress;
   items: CartItem[];
   subtotal: number;
   gstAmount: number;
   shippingFee: number;
   totalAmount: number;
-  status: 'Pending' | 'Printing' | 'Dispatched' | 'Delivered';
+  status: 'Pending' | 'Printing' | 'Dispatched' | 'Delivered' | 'PLACED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED';
+  orderStatus?: string;
+  paymentStatus?: string;
   createdAt: string;
   paymentMethod: string;
+  expectedProcessingTime?: string;
+  expectedShippingTime?: string;
+  expectedDeliveryTime?: string;
 }

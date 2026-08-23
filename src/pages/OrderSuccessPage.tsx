@@ -84,7 +84,7 @@ export const OrderSuccessPage: React.FC = () => {
             <div className="flex justify-between border-b border-slate-200 pb-2">
               <span className="text-slate-500">Delivery Address</span>
               <span className="font-semibold text-slate-900 text-right max-w-xs">
-                {order.shippingAddress.addressLine}, {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
+                {[order.shippingAddress.houseNo, order.shippingAddress.streetName, order.shippingAddress.area].filter(Boolean).join(', ')} — PIN {order.shippingAddress.pin}
               </span>
             </div>
 

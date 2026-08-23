@@ -1,147 +1,114 @@
 import { Category, Subcategory, Product, Order } from '../types';
 
+// ── Real MongoDB IDs — seeded via scripts/seedCatalog.ts ─────────────────────
 export const MOCK_CATEGORIES: Category[] = [
   {
-    id: 'cat-business',
-    name: 'Business & Office Essentials',
-    slug: 'business-office',
-    description: 'Visiting Cards, Letterheads, Envelopes, ID Cards & Corporate Stationery.',
-    image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
-    iconName: 'Briefcase',
-    productCount: 18
-  },
-  {
-    id: 'cat-marketing',
-    name: 'Brand Marketing & Display',
-    slug: 'brand-marketing',
-    description: 'Flex Banners, Roll-up Standees, Promo Tables, Canopies & Acrylic Boards.',
-    image: 'https://images.unsplash.com/photo-1542744094-3a3121699479?auto=format&fit=crop&w=800&q=80',
-    iconName: 'Megaphone',
-    productCount: 24
-  },
-  {
-    id: 'cat-wedding',
-    name: 'Wedding & Ceremonial',
-    slug: 'wedding-ceremonial',
-    description: 'Royal Wedding Invitations, Welcome Boards, RSVP Inserts & Gift Envelopes.',
+    id: '6a84960e7003f2bf9724c01b',
+    name: 'Wedding Essentials',
+    slug: 'wedding-essentials',
+    description: 'All kinds of Wedding Invitation Cards, Menus, Decor, & Management.',
     image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
     iconName: 'Sparkles',
-    productCount: 15
+    productCount: 0
   },
   {
-    id: 'cat-gifts',
-    name: 'Personalized Gifts & Decor',
-    slug: 'personalized-gifts',
-    description: 'Custom Ceramic Mugs, Acrylic Frames, Cushions, Branded Apparel & Plaques.',
+    id: '6a84960e7003f2bf9724c01c',
+    name: 'Brand Marketing & Events',
+    slug: 'brand-marketing-events',
+    description: 'Banners, Flyers, Promo Tables, Canopies, T-Shirts & Full Event Management.',
+    image: 'https://images.unsplash.com/photo-1542744094-3a3121699479?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Megaphone',
+    productCount: 0
+  },
+  {
+    id: '6a84960e7003f2bf9724c01d',
+    name: 'All About Business & Office',
+    slug: 'business-office',
+    description: 'Visiting Cards, Letterheads, Bill Books, Stamps, ID Cards & Packaging.',
+    image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Briefcase',
+    productCount: 0
+  },
+  {
+    id: '6a84960e7003f2bf9724c01e',
+    name: 'Personal Gifts',
+    slug: 'personal-gifts',
+    description: 'Photo Frames, Customized Mugs, Cushions, T-Shirts & Personalized Notebooks.',
     image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80',
     iconName: 'Gift',
-    productCount: 20
+    productCount: 0
   }
 ];
 
 export const MOCK_SUBCATEGORIES: Subcategory[] = [
-  // Business Essentials Subcategories
-  {
-    id: 'sub-visiting-cards',
-    categoryId: 'cat-business',
-    name: 'Visiting Cards',
-    slug: 'visiting-cards',
-    description: 'Matte, Gloss, Velvet, Metallic & Embossed Business Cards',
-    image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'sub-letterheads',
-    categoryId: 'cat-business',
-    name: 'Letterheads & Envelopes',
-    slug: 'letterheads-envelopes',
-    description: 'Premium Bond Paper Letterheads & Executive Printed Envelopes',
-    image: 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'sub-id-stamps',
-    categoryId: 'cat-business',
-    name: 'ID Cards & Stamps',
-    slug: 'id-cards-stamps',
-    description: 'PVC Laminated ID Cards, Lanyards & Self-Inking Rubber Stamps',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80'
-  },
-
-  // Marketing & Display Subcategories
-  {
-    id: 'sub-flex-banners',
-    categoryId: 'cat-marketing',
-    name: 'Flex & Star Banners',
-    slug: 'flex-banners',
-    description: 'Outdoor HD Flex Banners, Star Flex, Backlit & Frontlit Signages',
-    image: 'https://images.unsplash.com/photo-1542744094-3a3121699479?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'sub-standees',
-    categoryId: 'cat-marketing',
-    name: 'Roll-up Standees',
-    slug: 'roll-up-standees',
-    description: 'Aluminum Roll-Up Standees, Heavy Base & Luxury Banner Stands',
-    image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'sub-promo-tables',
-    categoryId: 'cat-marketing',
-    name: 'Promo Tables & Canopies',
-    slug: 'promo-tables-canopies',
-    description: 'Portable Demo Promo Tables, Event Pop-up Tents & Canopy Banners',
-    image: 'https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=600&q=80'
-  },
-
-  // Wedding & Ceremonial Subcategories
-  {
-    id: 'sub-wedding-cards',
-    categoryId: 'cat-wedding',
-    name: 'Royal Wedding Cards',
-    slug: 'wedding-cards',
-    description: 'Traditional, Acrylic, Velvet Touch & Foil Printed Invitations',
-    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'sub-welcome-boards',
-    categoryId: 'cat-wedding',
-    name: 'Welcome Boards & Signage',
-    slug: 'welcome-boards',
-    description: 'Easel Mounted Acrylic Signage, Floral Entrance Boards',
-    image: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=600&q=80'
-  },
-
-  // Gifts Subcategories
-  {
-    id: 'sub-mugs-drinkware',
-    categoryId: 'cat-gifts',
-    name: 'Custom Mugs & Drinkware',
-    slug: 'custom-mugs',
-    description: 'Ceramic Photo Mugs, Magic Heat-Reveal Mugs & Steel Flasks',
-    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'sub-photo-frames',
-    categoryId: 'cat-gifts',
-    name: 'Acrylic Frames & Plaques',
-    slug: 'photo-frames-plaques',
-    description: 'Floating Acrylic Wall Prints, Wooden Frames & Spotify Music Plaques',
-    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80'
-  },
-  {
-    id: 'sub-apparel',
-    categoryId: 'cat-gifts',
-    name: 'Branded T-Shirts & Caps',
-    slug: 'branded-apparel',
-    description: 'Custom Embroidered Polo Shirts, Cotton Tees & Promotional Caps',
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80'
-  }
+  // ── Wedding Essentials ──────────────────────────────────────────────────────
+  { id: '6a84960e7003f2bf9724c01f', categoryId: '6a84960e7003f2bf9724c01b', name: 'Invitation Card', slug: 'wedding-invitation-card', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c020', categoryId: '6a84960e7003f2bf9724c01b', name: 'Wedding Itinerary', slug: 'wedding-itinerary', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c021', categoryId: '6a84960e7003f2bf9724c01b', name: 'Thank You Card', slug: 'wedding-thank-you-card', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c022', categoryId: '6a84960e7003f2bf9724c01b', name: 'Welcome Board', slug: 'wedding-welcome-board', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c023', categoryId: '6a84960e7003f2bf9724c01b', name: 'Wedding Menu', slug: 'wedding-menu', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c024', categoryId: '6a84960e7003f2bf9724c01b', name: 'Sticker', slug: 'wedding-sticker', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c025', categoryId: '6a84960e7003f2bf9724c01b', name: 'Hamper', slug: 'wedding-hamper', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c026', categoryId: '6a84960e7003f2bf9724c01b', name: 'Gifts', slug: 'wedding-gifts', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c027', categoryId: '6a84960e7003f2bf9724c01b', name: 'Flower Car Decor', slug: 'wedding-flower-car-decor', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c028', categoryId: '6a84960e7003f2bf9724c01b', name: 'Totto Decor', slug: 'wedding-totto-decor', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c029', categoryId: '6a84960e7003f2bf9724c01b', name: 'All Types of Decoration', slug: 'wedding-all-types-of-decoration', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c02a', categoryId: '6a84960e7003f2bf9724c01b', name: 'Sound System', slug: 'wedding-sound-system', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c02b', categoryId: '6a84960e7003f2bf9724c01b', name: 'Guest Welcoming Service', slug: 'wedding-guest-welcoming-service', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c02c', categoryId: '6a84960e7003f2bf9724c01b', name: 'Hospitality Team', slug: 'wedding-hospitality-team', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c02d', categoryId: '6a84960e7003f2bf9724c01b', name: 'Full Event Planning & Management', slug: 'wedding-full-event-planning-management', description: '', image: '' },
+  // ── Brand Marketing & Events ────────────────────────────────────────────────
+  { id: '6a84960e7003f2bf9724c02e', categoryId: '6a84960e7003f2bf9724c01c', name: 'Posters', slug: 'brand-posters', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c02f', categoryId: '6a84960e7003f2bf9724c01c', name: 'Banner', slug: 'brand-banner', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c030', categoryId: '6a84960e7003f2bf9724c01c', name: 'Flyers / Handbills / Leaflets', slug: 'brand-flyers-handbills-leaflets', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c031', categoryId: '6a84960e7003f2bf9724c01c', name: 'Brochures', slug: 'brand-brochures', description: '', image: '' },
+  { id: '6a84960e7003f2bf9724c032', categoryId: '6a84960e7003f2bf9724c01c', name: 'Booklet', slug: 'brand-booklet', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8cc', categoryId: '6a84960e7003f2bf9724c01c', name: 'Sticker', slug: 'brand-sticker', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8cd', categoryId: '6a84960e7003f2bf9724c01c', name: 'Standee', slug: 'brand-standee', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8ce', categoryId: '6a84960e7003f2bf9724c01c', name: 'Promo Table', slug: 'brand-promo-table', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8cf', categoryId: '6a84960e7003f2bf9724c01c', name: 'Canopy Tent', slug: 'brand-canopy-tent', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d0', categoryId: '6a84960e7003f2bf9724c01c', name: 'All Types of Branding', slug: 'brand-all-types-of-branding', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d1', categoryId: '6a84960e7003f2bf9724c01c', name: 'Marketing / Brand Activation', slug: 'brand-marketing-brand-activation', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d2', categoryId: '6a84960e7003f2bf9724c01c', name: 'Custom T-Shirts & Caps', slug: 'brand-custom-t-shirts-caps', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d3', categoryId: '6a84960e7003f2bf9724c01c', name: 'Custom Paper Bags', slug: 'brand-custom-paper-bags', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d4', categoryId: '6a84960e7003f2bf9724c01c', name: 'Custom Paper Cups', slug: 'brand-custom-paper-cups', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d5', categoryId: '6a84960e7003f2bf9724c01c', name: 'Custom Water Bottle', slug: 'brand-custom-water-bottle', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d6', categoryId: '6a84960e7003f2bf9724c01c', name: 'Table Cover', slug: 'brand-table-cover', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d7', categoryId: '6a84960e7003f2bf9724c01c', name: 'Table Runner', slug: 'brand-table-runner', description: '', image: '' },
+  { id: '6a84964a35e452ed1bd9c8d8', categoryId: '6a84960e7003f2bf9724c01c', name: 'Invitation / Welcome / Thank You Letter', slug: 'brand-invitation-welcome-thank-you-letter', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8d9', categoryId: '6a84960e7003f2bf9724c01c', name: 'Custom Envelope', slug: 'brand-custom-envelope', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8da', categoryId: '6a84960e7003f2bf9724c01c', name: 'Inauguration Stalls', slug: 'brand-inauguration-stalls', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8db', categoryId: '6a84960e7003f2bf9724c01c', name: 'Memento', slug: 'brand-memento', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8dc', categoryId: '6a84960e7003f2bf9724c01c', name: 'Sound System', slug: 'brand-sound-system', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8dd', categoryId: '6a84960e7003f2bf9724c01c', name: 'Management Team', slug: 'brand-management-team', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8de', categoryId: '6a84960e7003f2bf9724c01c', name: 'Full Event Management', slug: 'brand-full-event-management', description: '', image: '' },
+  // ── All About Business & Office ─────────────────────────────────────────────
+  { id: '6a84964b35e452ed1bd9c8df', categoryId: '6a84960e7003f2bf9724c01d', name: 'Visiting Card', slug: 'business-visiting-card', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e0', categoryId: '6a84960e7003f2bf9724c01d', name: 'Letterhead / Letter Card', slug: 'business-letterhead-letter-card', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e1', categoryId: '6a84960e7003f2bf9724c01d', name: 'Bill Book', slug: 'business-bill-book', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e2', categoryId: '6a84960e7003f2bf9724c01d', name: 'Stamps', slug: 'business-stamps', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e3', categoryId: '6a84960e7003f2bf9724c01d', name: 'Diaries', slug: 'business-diaries', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e4', categoryId: '6a84960e7003f2bf9724c01d', name: 'Nameplate', slug: 'business-nameplate', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e5', categoryId: '6a84960e7003f2bf9724c01d', name: 'Sign Board', slug: 'business-sign-board', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e6', categoryId: '6a84960e7003f2bf9724c01d', name: 'Customized Packaging', slug: 'business-customized-packaging', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e7', categoryId: '6a84960e7003f2bf9724c01d', name: 'All Stationery Items', slug: 'business-all-stationery-items', description: '', image: '' },
+  // ── Personal Gifts ──────────────────────────────────────────────────────────
+  { id: '6a84964b35e452ed1bd9c8e8', categoryId: '6a84960e7003f2bf9724c01e', name: 'Photo Frame', slug: 'personal-photo-frame', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8e9', categoryId: '6a84960e7003f2bf9724c01e', name: 'Personalized Mugs', slug: 'personal-personalized-mugs', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8ea', categoryId: '6a84960e7003f2bf9724c01e', name: 'Customized Planters', slug: 'personal-customized-planters', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8eb', categoryId: '6a84960e7003f2bf9724c01e', name: 'Personalized Diary', slug: 'personal-personalized-diary', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8ec', categoryId: '6a84960e7003f2bf9724c01e', name: 'Personalized Notebook', slug: 'personal-personalized-notebook', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8ed', categoryId: '6a84960e7003f2bf9724c01e', name: 'Personalized Calendar', slug: 'personal-personalized-calendar', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8ee', categoryId: '6a84960e7003f2bf9724c01e', name: 'Cushions', slug: 'personal-cushions', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8ef', categoryId: '6a84960e7003f2bf9724c01e', name: 'Customized Bag', slug: 'personal-customized-bag', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8f0', categoryId: '6a84960e7003f2bf9724c01e', name: 'T-Shirt', slug: 'personal-t-shirt', description: '', image: '' },
 ];
 
 export const MOCK_PRODUCTS: Product[] = [
   {
     id: 'prod-visiting-card-matte',
     categoryId: 'cat-business',
-    subcategoryId: 'sub-visiting-cards',
+    subcategoryId: 'sub-business-0',
     title: 'Premium Matte Business Cards',
     slug: 'premium-matte-business-cards',
     description: 'High-grade 350 GSM Art Card stock with smooth velvet matte lamination for an executive touch.',
@@ -189,8 +156,8 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'prod-flex-banner-outdoor',
-    categoryId: 'cat-marketing',
-    subcategoryId: 'sub-flex-banners',
+    categoryId: 'cat-brand',
+    subcategoryId: 'sub-brand-1',
     title: 'HD Flex Banner (1440 DPI Outdoor)',
     slug: 'hd-flex-banner-outdoor',
     description: 'Heavy duty weather-proof PVC flex banner printed with 1440 DPI high definition eco-solvent inks.',
@@ -233,8 +200,8 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'prod-rollup-standee',
-    categoryId: 'cat-marketing',
-    subcategoryId: 'sub-standees',
+    categoryId: 'cat-brand',
+    subcategoryId: 'sub-brand-6',
     title: 'Aluminum Roll-Up Standee (6ft × 2.5ft)',
     slug: 'aluminum-rollup-standee',
     description: 'Sleek aluminum mechanism with non-curl vinyl graphics. Portable carrying bag included.',
@@ -273,8 +240,8 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'prod-promo-table-demo',
-    categoryId: 'cat-marketing',
-    subcategoryId: 'sub-promo-tables',
+    categoryId: 'cat-brand',
+    subcategoryId: 'sub-brand-7',
     title: 'Portable Demonstration Promo Table',
     slug: 'portable-promo-table',
     description: 'Foldable counter booth with header banner board and custom vinyl wrap graphics for exhibitions & pop-ups.',
@@ -305,7 +272,7 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: 'prod-wedding-card-royal',
     categoryId: 'cat-wedding',
-    subcategoryId: 'sub-wedding-cards',
+    subcategoryId: 'sub-wedding-0',
     title: 'Royal Metallic Gold Foil Wedding Suite',
     slug: 'royal-gold-foil-wedding-card',
     description: 'Luxury 400 GSM textured card stock with raised gold foil stamping, custom inserts & wax seal envelopes.',
@@ -345,8 +312,8 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'prod-ceramic-photo-mug',
-    categoryId: 'cat-gifts',
-    subcategoryId: 'sub-mugs-drinkware',
+    categoryId: 'cat-personal',
+    subcategoryId: 'sub-personal-1',
     title: 'Custom Ceramic Photo Mug (325ml)',
     slug: 'custom-ceramic-photo-mug',
     description: 'Dishwasher & microwave safe grade-A ceramic mug with vibrant edge-to-edge sublimation print.',
@@ -378,8 +345,8 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'prod-acrylic-wall-frame',
-    categoryId: 'cat-gifts',
-    subcategoryId: 'sub-photo-frames',
+    categoryId: 'cat-personal',
+    subcategoryId: 'sub-personal-0',
     title: 'Frameless Floating Acrylic Photo Print',
     slug: 'frameless-acrylic-photo-print',
     description: '3mm crystal clear acrylic sheet direct UV printed with metal standoff wall mounts for modern home decor.',
@@ -419,8 +386,8 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'prod-branded-polo-tshirt',
-    categoryId: 'cat-gifts',
-    subcategoryId: 'sub-apparel',
+    categoryId: 'cat-personal',
+    subcategoryId: 'sub-personal-8',
     title: 'Custom Embroidered Corporate Polo T-Shirt',
     slug: 'custom-embroidered-polo-tshirt',
     description: '100% Bio-washed combed cotton 230 GSM pique polo shirt with custom chest logo embroidery or DTF print.',
@@ -466,12 +433,12 @@ export const MOCK_ORDERS: Order[] = [
     shippingAddress: {
       fullName: 'Rahul Sharma',
       email: 'rahul.sharma@techcorp.in',
-      phone: '+91 98765 43210',
+      phone: '+91 75950 31319',
       gstin: '07AAAAA1234A1Z5',
-      addressLine: 'Suite 402, Cyber Towers, Hitec City',
-      city: 'Hyderabad',
-      state: 'Telangana',
-      pincode: '500081'
+      houseNo: 'Suite 402, Cyber Towers',
+      streetName: 'Hitec City Main Road',
+      area: 'Hyderabad, Telangana',
+      pin: '500081'
     },
     items: [
       {
@@ -512,10 +479,10 @@ export const MOCK_ORDERS: Order[] = [
       fullName: 'Ananya Verma',
       email: 'ananya@designstudio.co',
       phone: '+91 91234 56789',
-      addressLine: 'Flat 12B, Rosewood Apartments, Indiranagar',
-      city: 'Bengaluru',
-      state: 'Karnataka',
-      pincode: '560038'
+      houseNo: 'Flat 12B, Rosewood Apartments',
+      streetName: 'Indiranagar Main Road',
+      area: 'Bengaluru, Karnataka',
+      pin: '560038'
     },
     items: [
       {

@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Star, ChevronRight, SlidersHorizontal, ArrowRight, Check } from 'lucide-react';
-import { useOrders } from '../context/OrderContext';
-import { MOCK_CATEGORIES, MOCK_SUBCATEGORIES } from '../data/mockData';
+import { useCatalog } from '../context/CatalogContext';
+import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 
 export const ProductsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const subIdParam = searchParams.get('subId');
   const catIdParam = searchParams.get('catId');
-  const { products } = useOrders();
+  const { products, categories, subcategories, loadingCatalog } = useCatalog();
 
   const [selectedSubId, setSelectedSubId] = useState<string | null>(subIdParam);
 
-  const selectedSub = MOCK_SUBCATEGORIES.find(s => s.id === selectedSubId);
-  const selectedCat = MOCK_CATEGORIES.find(c => c.id === catIdParam) || (selectedSub ? MOCK_CATEGORIES.find(c => c.id === selectedSub.categoryId) : null);
+  const selectedSub = subcategories.find(s => s.id === selectedSubId);
+  const selectedCat = categories.find(c => c.id === catIdParam) || (selectedSub ? categories.find(c => c.id === selectedSub.categoryId) : null);
 
   const filteredProducts = products.filter(p => {
     if (selectedSubId) return p.subcategoryId === selectedSubId;
@@ -45,10 +45,10 @@ export const ProductsPage: React.FC = () => {
         </nav>
 
         {/* Page Title & Filter Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {selectedSub ? selectedSub.name : selectedCat ? selectedCat.name : 'Print-on-Demand Catalog'}
+              {loadingCatalog ? 'Loading...' : (selectedSub ? selectedSub.name : selectedCat ? selectedCat.name : 'Print-on-Demand Catalog')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
               Select product configurations, upload custom artwork & instantly preview live pricing.
@@ -56,35 +56,43 @@ export const ProductsPage: React.FC = () => {
           </div>
 
           {/* Subcategory Pills */}
-          <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none">
-            <button
-              onClick={() => setSelectedSubId(null)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${
-                selectedSubId === null
-                  ? 'bg-brand-blue text-white shadow'
-                  : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-              }`}
-            >
-              All Products
-            </button>
-            {MOCK_SUBCATEGORIES.map(sub => (
+          {!loadingCatalog && (
+            <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none">
               <button
-                key={sub.id}
-                onClick={() => setSelectedSubId(sub.id)}
+                onClick={() => setSelectedSubId(null)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${
-                  selectedSubId === sub.id
+                  selectedSubId === null
                     ? 'bg-brand-blue text-white shadow'
                     : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
                 }`}
               >
-                {sub.name}
+                All Products
               </button>
-            ))}
-          </div>
+              {subcategories.map(sub => (
+                <button
+                  key={sub.id}
+                  onClick={() => setSelectedSubId(sub.id)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${
+                    selectedSubId === sub.id
+                      ? 'bg-brand-blue text-white shadow'
+                      : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                  }`}
+                >
+                  {sub.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Product Cards Grid */}
-        {filteredProducts.length === 0 ? (
+        {loadingCatalog ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+              <div key={n} className="bg-slate-200 rounded-2xl h-80"></div>
+            ))}
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
             <SlidersHorizontal className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <h3 className="text-lg font-bold text-slate-800">No products found for this subcategory</h3>
@@ -101,7 +109,7 @@ export const ProductsPage: React.FC = () => {
                   {/* Thumbnail */}
                   <div className="relative h-48 sm:h-52 bg-slate-100 overflow-hidden">
                     <img
-                      src={product.thumbnail}
+                      src={optimizeCloudinaryUrl(product.thumbnail)}
                       alt={product.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

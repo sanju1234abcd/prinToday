@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Zap, ChevronRight, ArrowRight } from 'lucide-react';
-import { useOrders } from '../context/OrderContext';
+import { useCatalog } from '../context/CatalogContext';
+import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 
 export const BestSellersCarousel: React.FC = () => {
-  const { products } = useOrders();
+  const { products } = useCatalog();
   const topProducts = products.slice(0, 6);
 
   return (
@@ -32,25 +33,26 @@ export const BestSellersCarousel: React.FC = () => {
 
         {/* Horizontal Swipeable Container */}
         <div className="flex space-x-4 sm:space-x-6 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory scrollbar-none">
-          {topProducts.map(product => (
-            <div
+          {topProducts.map((product: any) => (
+            <Link
               key={product.id}
+              to={`/product/${product.id}`}
               className="snap-start flex-shrink-0 w-[260px] sm:w-[300px] bg-slate-50 rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col group"
             >
               {/* Product Thumbnail */}
               <div className="relative h-44 sm:h-52 overflow-hidden bg-slate-100">
                 <img
-                  src={product.thumbnail}
+                  src={optimizeCloudinaryUrl(product.thumbnail)}
                   alt={product.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 
                 {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col space-y-1">
-                  {product.badges.map((badge, idx) => (
+                  {product.badges.slice(0, 2).map((badge: string, idx: number) => (
                     <span
                       key={idx}
-                      className="px-2.5 py-1 bg-brand-navy/90 backdrop-blur-md text-white text-[10px] font-extrabold rounded-md shadow"
+                      className="px-2 py-0.5 bg-brand-navy/90 backdrop-blur-md text-white text-[9px] font-extrabold uppercase tracking-wide rounded-md shadow-sm"
                     >
                       {badge}
                     </span>
@@ -97,7 +99,7 @@ export const BestSellersCarousel: React.FC = () => {
                   </Link>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

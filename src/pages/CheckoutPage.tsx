@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   ShieldCheck,
@@ -13,25 +13,71 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useOrders } from '../context/OrderContext';
+import { useAuth } from '../context/AuthContext';
 import { ShippingAddress } from '../types';
 
 export const CheckoutPage: React.FC = () => {
   const { cart, removeFromCart, updateQuantity, clearCart, cartSubtotal } = useCart();
   const { placeOrder } = useOrders();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState<ShippingAddress>({
-    fullName: 'Rahul Sharma',
-    email: 'rahul.sharma@techcorp.in',
-    phone: '+91 98765 43210',
-    gstin: '07AAAAA0000A1Z5',
-    addressLine: 'Suite 402, Cyber Towers, Hitec City',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    pincode: '500081'
+    fullName: '',
+    email: '',
+    phone: '',
+    gstin: '',
+    houseNo: '',
+    buildingName: '',
+    streetName: '',
+    area: '',
+    state: '',
+    pin: ''
   });
 
   const [paymentMethod, setPaymentMethod] = useState('UPI / Online Payment');
+
+  useEffect(() => {
+    if (user) {
+      const address = user.accountType === 'ORGANIZATION' ? user.organization?.address : user.individual?.address;
+      setFormData({
+        fullName: user.accountType === 'ORGANIZATION' ? (user.organization?.contactName || '') : (user.individual?.name || ''),
+        email: user.email || '',
+        phone: user.mobileNumber || '',
+        gstin: user.accountType === 'ORGANIZATION' ? (user.organization?.gstin || '') : '',
+        houseNo: address?.houseNo || '',
+        buildingName: address?.buildingName || '',
+        streetName: address?.streetName || '',
+        area: address?.area || '',
+        state: '',
+        pin: address?.pin || ''
+      });
+    }
+  }, [user]);
+
+  // Payment constraints
+  interface PaymentOption {
+    id: string;
+    label: string;
+    disabled: boolean;
+    message?: string;
+  }
+
+  const paymentOptions: PaymentOption[] = [
+    { id: 'UPI / Online Payment', label: 'UPI / Online Payment', disabled: false },
+    { id: 'Credit / Debit Card', label: 'Credit / Debit Card', disabled: false },
+    { id: 'Net Banking', label: 'Net Banking', disabled: false }
+  ];
+
+  if (user?.accountType === 'ORGANIZATION') {
+    const isEligible = !!user.organization?.creditEligible;
+    paymentOptions.push({
+      id: '30 Days Credit (50% Advance)',
+      label: '30 Days Credit (50% Advance)',
+      disabled: !isEligible,
+      message: !isEligible ? 'Action Required: Pending Admin Approval' : undefined
+    });
+  }
 
   const gstAmount = Math.round(cartSubtotal * 0.18);
   const shippingFee = cartSubtotal > 999 || cart.length === 0 ? 0 : 99;
@@ -41,19 +87,52 @@ export const CheckoutPage: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmitOrder = (e: React.FormEvent) => {
+  const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) return;
 
-    const createdOrder = placeOrder(formData, cart, paymentMethod);
-    clearCart();
-    navigate('/order-success', { state: { order: createdOrder } });
+    // The backend uses 'COD', 'RAZORPAY', '30_DAYS_CREDIT'
+    const backendPaymentMethod = paymentMethod === '30 Days Credit (50% Advance)' ? '30_DAYS_CREDIT' : 'RAZORPAY';
+
+    try {
+      const createdOrder = await placeOrder(formData, cart, backendPaymentMethod);
+      clearCart();
+      navigate('/order-success', { state: { order: createdOrder } });
+    } catch (error: any) {
+      console.error('Order creation failed:', error);
+      alert(`Order creation failed: ${error.message || 'Please try again.'}`);
+    }
   };
+
+  if (!user) {
+    return (
+      <div className="py-20 bg-slate-50 min-h-screen flex items-center justify-center px-4">
+        <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-4 max-w-lg mx-auto shadow-xl">
+          <div className="w-16 h-16 rounded-full bg-brand-blue/10 text-brand-blue flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-900">Sign In Required</h2>
+          <p className="text-slate-500 font-medium">
+            You must be logged in to securely place your order and track its status.
+          </p>
+          <div className="pt-4">
+            <button
+              onClick={() => navigate('/')} // Or open modal if it was global, but we can just send to home
+              className="inline-flex items-center space-x-2 px-8 py-3.5 bg-brand-blue text-white font-bold rounded-xl shadow-lg shadow-brand-blue/30 hover:shadow-brand-blue/50 hover:-translate-y-0.5 transition-all"
+            >
+              <ArrowRight className="w-4 h-4" />
+              <span>Go to Home & Sign In</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-8 sm:py-12 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-xs font-semibold text-slate-500 mb-6">
           <Link to="/" className="hover:text-brand-blue">Home</Link>
@@ -84,10 +163,10 @@ export const CheckoutPage: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
+
             {/* Left Column: Delivery Form & Payment Selection */}
             <div className="lg:col-span-7 space-y-6">
-              
+
               {/* Shipping Address Box */}
               <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-4">
                 <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2 border-b border-slate-100 pb-3">
@@ -148,24 +227,51 @@ export const CheckoutPage: React.FC = () => {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className="text-xs font-bold text-slate-700 block mb-1">Street Address</label>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">House / Flat No.</label>
                     <input
                       type="text"
-                      name="addressLine"
+                      name="houseNo"
                       required
-                      value={formData.addressLine}
+                      placeholder="e.g. Flat 4B, Shop No. 12"
+                      value={formData.houseNo}
+                      onChange={handleChange}
+                      className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-blue outline-none"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Building / Society Name (Optional)</label>
+                    <input
+                      type="text"
+                      name="buildingName"
+                      placeholder="e.g. Sunrise Heights, M.G. Plaza"
+                      value={formData.buildingName || ''}
                       onChange={handleChange}
                       className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-blue outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">City</label>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Street / Road Name</label>
                     <input
                       type="text"
-                      name="city"
+                      name="streetName"
                       required
-                      value={formData.city}
+                      placeholder="e.g. MG Road, Link Road"
+                      value={formData.streetName}
+                      onChange={handleChange}
+                      className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-blue outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Area / City</label>
+                    <input
+                      type="text"
+                      name="area"
+                      required
+                      placeholder="e.g. Andheri, Bandra"
+                      value={formData.area}
                       onChange={handleChange}
                       className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-blue outline-none"
                     />
@@ -175,9 +281,10 @@ export const CheckoutPage: React.FC = () => {
                     <label className="text-xs font-bold text-slate-700 block mb-1">Pincode</label>
                     <input
                       type="text"
-                      name="pincode"
+                      name="pin"
                       required
-                      value={formData.pincode}
+                      placeholder="e.g. 400001"
+                      value={formData.pin}
                       onChange={handleChange}
                       className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-brand-blue outline-none"
                     />
@@ -193,26 +300,34 @@ export const CheckoutPage: React.FC = () => {
                 </h2>
 
                 <div className="space-y-2">
-                  {['UPI / Online Payment', 'Credit / Debit Card', 'Net Banking', 'Cash on Delivery (COD)'].map(method => (
+                  {paymentOptions.map(option => (
                     <label
-                      key={method}
-                      className={`p-3.5 rounded-xl border flex items-center justify-between cursor-pointer transition text-xs font-bold ${
-                        paymentMethod === method
-                          ? 'border-brand-blue bg-brand-blue/5 text-brand-blue ring-2 ring-brand-blue/20'
-                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                      }`}
+                      key={option.id}
+                      className={`p-3.5 rounded-xl border flex items-center justify-between transition text-xs font-bold ${
+                          option.disabled ? 'opacity-60 cursor-not-allowed border-slate-200 bg-slate-100 grayscale' :
+                          paymentMethod === option.id
+                          ? 'cursor-pointer border-brand-blue bg-brand-blue/5 text-brand-blue ring-2 ring-brand-blue/20'
+                          : 'cursor-pointer border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                        }`}
                     >
                       <div className="flex items-center space-x-3">
                         <input
                           type="radio"
                           name="paymentMethod"
-                          checked={paymentMethod === method}
-                          onChange={() => setPaymentMethod(method)}
+                          disabled={option.disabled}
+                          checked={paymentMethod === option.id}
+                          onChange={() => !option.disabled && setPaymentMethod(option.id)}
                           className="accent-brand-blue"
                         />
-                        <span>{method}</span>
+                        <div className="flex flex-col">
+                          <span className={option.disabled ? 'text-slate-500 line-through decoration-slate-300' : ''}>{option.label}</span>
+                          {option.message && (
+                            <span className="text-[10px] text-rose-500 font-bold mt-0.5 uppercase tracking-wider">{option.message}</span>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-[10px] text-brand-green font-semibold">100% Secure</span>
+                      {!option.disabled && <span className="text-[10px] text-brand-green font-semibold">100% Secure</span>}
+                      {option.disabled && <Lock className="w-3.5 h-3.5 text-slate-400" />}
                     </label>
                   ))}
                 </div>
@@ -222,7 +337,7 @@ export const CheckoutPage: React.FC = () => {
 
             {/* Right Column: Order Review & Total Calculation */}
             <div className="lg:col-span-5 space-y-6">
-              
+
               <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-4">
                 <h2 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">
                   Cart Items ({cart.length})

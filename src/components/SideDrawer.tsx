@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { MOCK_CATEGORIES } from '../data/mockData';
+import { Logo } from './Logo';
 
 interface SideDrawerProps {
   isOpen: boolean;
@@ -88,7 +89,6 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose }) => {
     { label: 'Home', icon: <Home className="w-5 h-5" />, path: '/' },
     { label: 'All Products', icon: <ShoppingBag className="w-5 h-5" />, path: '/products' },
     { label: 'My Orders', icon: <FileText className="w-5 h-5" />, path: '/orders' },
-    { label: 'Admin Panel', icon: <Settings className="w-5 h-5" />, path: '/admin' },
   ];
 
   const categoryIconMap: Record<string, React.ReactNode> = {
@@ -103,18 +103,8 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose }) => {
   // ───────────────────────────────────────────────────────────────
   const DrawerHeader = () => (
     <div className="px-5 py-4 bg-gradient-to-r from-brand-navy to-brand-blue flex items-center justify-between flex-shrink-0">
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-blue-light to-brand-green flex items-center justify-center shadow-md">
-          <span className="font-extrabold text-white text-xl">P</span>
-        </div>
-        <div>
-          <p className="font-extrabold text-white tracking-tight text-lg leading-none">
-            Prin<span className="text-brand-green">Today</span>
-          </p>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold mt-0.5">
-            Think it. Print it.
-          </p>
-        </div>
+      <div className="flex items-center space-x-3 bg-white p-1.5 rounded-xl shadow-inner">
+        <Logo className="h-10 w-auto" />
       </div>
       <button
         onClick={onClose}
@@ -236,7 +226,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose }) => {
         </div>
         <div>
           <p className="font-bold text-slate-900 text-xs">Customer Support</p>
-          <p className="text-brand-blue font-semibold text-xs">+91 98765 43210</p>
+          <p className="text-brand-blue font-semibold text-xs">+91 75950 31319</p>
         </div>
       </div>
       <ShieldCheck className="w-5 h-5 text-brand-green opacity-70" />

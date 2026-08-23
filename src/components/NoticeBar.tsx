@@ -10,7 +10,7 @@ export const NoticeBar: React.FC = () => {
           <div className="animate-marquee flex items-center space-x-8 text-slate-300">
             <span className="flex items-center space-x-1">
               <PhoneCall className="w-3.5 h-3.5 text-brand-green" />
-              <span>For Enquiry Call: <strong className="text-white">+91 98765 43210</strong></span>
+              <span>For Enquiry Call: <strong className="text-white">+91 75950 31319</strong></span>
             </span>
             <span className="flex items-center space-x-1">
               <FileText className="w-3.5 h-3.5 text-brand-green" />
@@ -31,7 +31,7 @@ export const NoticeBar: React.FC = () => {
         <div className="hidden sm:flex items-center space-x-6 text-slate-300">
           <span className="flex items-center space-x-1.5">
             <PhoneCall className="w-3.5 h-3.5 text-brand-green" />
-            <span>Hotline: <a href="tel:+919876543210" className="hover:text-brand-green font-semibold text-white transition">+91 98765 43210</a></span>
+            <span>Hotline: <a href="tel:+917595031319" className="hover:text-brand-green font-semibold text-white transition">+91 75950 31319</a></span>
           </span>
           <span className="flex items-center space-x-1.5">
             <FileText className="w-3.5 h-3.5 text-brand-green" />

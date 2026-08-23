@@ -94,50 +94,38 @@ export const OrdersPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Items in order */}
-                <div className="space-y-3">
-                  {order.items.map(item => (
-                    <div
-                      key={item.cartItemId}
-                      className="p-3 bg-slate-50 rounded-2xl border border-slate-200/60 flex items-center space-x-4"
-                    >
-                      <img
-                        src={item.product.thumbnail}
-                        alt={item.product.title}
-                        className="w-14 h-14 rounded-xl object-cover shrink-0"
-                      />
-
-                      <div className="flex-1 text-xs space-y-0.5">
-                        <h4 className="font-bold text-slate-900">{item.product.title}</h4>
-                        {item.customDimensions && (
-                          <p className="text-[11px] text-slate-500">
-                            Size: {item.customDimensions.width} × {item.customDimensions.height} {item.customDimensions.unit} ({item.customDimensions.totalSqFt} SqFt)
-                          </p>
-                        )}
-                        <p className="text-[11px] text-slate-500">
-                          Qty: <strong>{item.quantity}</strong> | Price: <strong>₹{item.totalPrice}</strong>
-                        </p>
-
-                        {item.artworkFile && (
-                          <div className="pt-1 flex items-center space-x-1 text-[10px] text-brand-green font-bold">
-                            <FileCheck className="w-3 h-3" />
-                            <span>Artwork Attached: {item.artworkFile.name}</span>
-                          </div>
-                        )}
+                <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex -space-x-2">
+                    {order.items.slice(0, 3).map((item: any, idx: number) => {
+                      const thumbnail = item.product?.thumbnail || item.artworkUrl || 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=200&q=80';
+                      return (
+                        <img 
+                          key={idx}
+                          src={thumbnail} 
+                          alt="Product thumbnail" 
+                          className="w-10 h-10 rounded-full border-2 border-white object-cover bg-slate-100 shadow-sm"
+                          onError={(e) => { (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=200&q=80'; }}
+                        />
+                      );
+                    })}
+                    {order.items.length > 3 && (
+                      <div className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 shadow-sm z-10">
+                        +{order.items.length - 3}
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Shipping Details */}
-                <div className="pt-2 text-xs text-slate-600 flex flex-col sm:flex-row justify-between gap-2 border-t border-slate-100">
-                  <div>
-                    <span className="font-bold text-slate-800">Ship To: </span>
-                    <span>{order.shippingAddress.fullName}, {order.shippingAddress.city} ({order.shippingAddress.pincode})</span>
+                    )}
                   </div>
-
-                  <div className="text-slate-500">
-                    Payment Method: <strong className="text-slate-800">{order.paymentMethod}</strong>
+                  
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xs text-slate-500 font-medium">
+                      {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                    </span>
+                    <Link
+                      to={`/orders/${order.id || order.orderNumber}`}
+                      className="inline-flex items-center space-x-1.5 px-4 py-2 bg-brand-blue/10 text-brand-blue font-bold text-xs rounded-xl hover:bg-brand-blue hover:text-white transition-colors"
+                    >
+                      <span>View Details</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </Link>
                   </div>
                 </div>
 

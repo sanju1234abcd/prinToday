@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, MessageCircle, Heart } from 'lucide-react';
 import { MOCK_CATEGORIES } from '../data/mockData';
+import { Logo } from './Logo';
 
 export const Footer: React.FC = () => {
   return (
@@ -12,13 +13,8 @@ export const Footer: React.FC = () => {
           
           {/* Brand Info */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-blue to-brand-green flex items-center justify-center font-extrabold text-white text-lg">
-                P
-              </div>
-              <span className="text-2xl font-extrabold tracking-tight text-white">
-                Prin<span className="text-brand-green">Today</span>
-              </span>
+            <div className="flex items-center space-x-2.5 bg-white p-2.5 rounded-2xl w-fit shadow-md">
+              <Logo className="h-10 w-auto" />
             </div>
             <p className="text-slate-400 text-xs sm:text-sm max-w-sm leading-relaxed">
               PrinToday is India's leading print-on-demand platform for flex banners, visiting cards, roll-up standees, corporate promo tables, wedding invitations, and personalized gifts.
@@ -27,7 +23,7 @@ export const Footer: React.FC = () => {
             {/* WhatsApp & Call Actions */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
-                href="https://wa.me/919876543210"
+                href="https://wa.me/917595031319"
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center space-x-2 transition shadow-md"
@@ -36,11 +32,11 @@ export const Footer: React.FC = () => {
                 <span>WhatsApp Order Support</span>
               </a>
               <a
-                href="tel:+919876543210"
+                href="tel:+917595031319"
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl flex items-center space-x-2 transition border border-white/15"
               >
                 <Phone className="w-4 h-4 text-brand-green" />
-                <span>+91 98765 43210</span>
+                <span>+91 75950 31319</span>
               </a>
             </div>
           </div>
