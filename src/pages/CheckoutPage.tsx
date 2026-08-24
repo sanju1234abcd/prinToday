@@ -9,8 +9,10 @@ import {
   FileCheck,
   Building2,
   CheckCircle2,
-  Lock
+  Lock,
+  MapPin
 } from 'lucide-react';
+import { fetchAddressFromLocation } from '../utils/location';
 import { useCart } from '../context/CartContext';
 import { useOrders } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
@@ -36,6 +38,27 @@ export const CheckoutPage: React.FC = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('UPI / Online Payment');
+  const [locLoading, setLocLoading] = useState(false);
+
+  const handleDetectLocation = async () => {
+    setLocLoading(true);
+    try {
+      const addr = await fetchAddressFromLocation();
+      setFormData(prev => ({
+        ...prev,
+        houseNo: addr.houseNo || prev.houseNo,
+        buildingName: addr.buildingName || prev.buildingName,
+        streetName: addr.streetName || prev.streetName,
+        area: addr.area || prev.area,
+        pin: addr.pin || prev.pin,
+        state: addr.state || prev.state,
+      }));
+    } catch (err: any) {
+      alert(err.message || 'Failed to detect location. Ensure location access is allowed.');
+    } finally {
+      setLocLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -169,10 +192,21 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Shipping Address Box */}
               <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2 border-b border-slate-100 pb-3">
-                  <Truck className="w-5 h-5 text-brand-green" />
-                  <span>1. Delivery & Tax Invoicing Address</span>
-                </h2>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                    <Truck className="w-5 h-5 text-brand-green" />
+                    <span>1. Delivery & Tax Invoicing Address</span>
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={handleDetectLocation}
+                    disabled={locLoading}
+                    className="flex items-center gap-1.5 text-xs font-bold text-brand-blue hover:text-brand-blue-dark transition disabled:opacity-50"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    {locLoading ? 'Detecting...' : 'Detect Location'}
+                  </button>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>

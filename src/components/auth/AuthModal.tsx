@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Smartphone, Mail, Building, User as UserIcon, AlertCircle, UploadCloud } from 'lucide-react';
+import { X, Smartphone, Mail, Building, User as UserIcon, AlertCircle, UploadCloud, MapPin } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { uploadToCloudinary } from '../../utils/cloudinaryUpload';
+import { fetchAddressFromLocation } from '../../utils/location';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [regType, setRegType] = useState<'INDIVIDUAL' | 'ORGANIZATION'>('INDIVIDUAL');
 
   const [loading, setLoading] = useState(false);
+  const [locLoading, setLocLoading] = useState(false);
   const [error, setError] = useState('');
   
   // Login Form
@@ -118,6 +120,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDetectLocation = async () => {
+    setLocLoading(true);
+    setError('');
+    try {
+      const addr = await fetchAddressFromLocation();
+      setDetails(prev => ({
+        ...prev,
+        houseNo: addr.houseNo || prev.houseNo,
+        streetName: addr.streetName || prev.streetName,
+        area: addr.area || prev.area,
+        pin: addr.pin || prev.pin,
+      }));
+    } catch (err: any) {
+      setError(err.message || 'Failed to detect location. Ensure location access is allowed.');
+    } finally {
+      setLocLoading(false);
     }
   };
 
@@ -286,11 +307,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 )}
 
                 <div className="pt-2">
-                  <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mb-2">Address</h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Address</h4>
+                    <button
+                      type="button"
+                      onClick={handleDetectLocation}
+                      disabled={locLoading}
+                      className="flex items-center gap-1.5 text-xs font-bold text-brand-blue hover:text-brand-blue-dark transition disabled:opacity-50"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      {locLoading ? 'Detecting...' : 'Detect Location'}
+                    </button>
+                  </div>
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">Street Address / Building</label>
-                      <input type="text" required name="streetName" value={details.streetName} onChange={handleDetailChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-semibold outline-none focus:border-brand-blue" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">House / Flat No.</label>
+                        <input type="text" required name="houseNo" value={details.houseNo} onChange={handleDetailChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-semibold outline-none focus:border-brand-blue" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-bold text-slate-700 block mb-1">Street / Road</label>
+                        <input type="text" required name="streetName" value={details.streetName} onChange={handleDetailChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-semibold outline-none focus:border-brand-blue" />
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
