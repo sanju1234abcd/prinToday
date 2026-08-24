@@ -52,10 +52,8 @@ interface RegisterPayload {
 interface AuthContextType {
   user: UserProfile | null;
   loading: boolean;
-  initiateRegister: (payload: RegisterPayload) => Promise<void>;
-  verifyRegisterOtp: (email: string, otp: string) => Promise<void>;
-  sendLoginOtp: (email: string) => Promise<void>;
-  verifyLoginOtp: (email: string, otp: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
+  login: (identifier: string) => Promise<void>;
   findAccount: (mobile: string) => Promise<{ maskedEmail: string }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -86,51 +84,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUser().finally(() => setLoading(false));
   }, [refreshUser]);
 
-  const initiateRegister = async (payload: RegisterPayload) => {
-    const res = await fetch(`${API}/auth/initiate-register`, {
+  const register = async (payload: RegisterPayload) => {
+    const res = await fetch(`${API}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(payload)
     });
     const data = await res.json();
     if (!res.ok) {
-      const err = new Error(data.error || 'Registration initiation failed');
+      const err = new Error(data.error || 'Registration failed');
       (err as any).code = data.code;
       throw err;
     }
-  };
-
-  const verifyRegisterOtp = async (email: string, otp: string) => {
-    const res = await fetch(`${API}/auth/verify-register-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email, otp })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Registration verification failed');
     await refreshUser();
   };
 
-  const sendLoginOtp = async (email: string) => {
-    const res = await fetch(`${API}/auth/send-login-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
-  };
-
-  const verifyLoginOtp = async (email: string, otp: string) => {
-    const res = await fetch(`${API}/auth/verify-login-otp`, {
+  const login = async (identifier: string) => {
+    const res = await fetch(`${API}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ email, otp })
+      body: JSON.stringify({ identifier })
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'OTP verification failed');
+    if (!res.ok) throw new Error(data.error || 'Login failed');
     await refreshUser();
   };
 
@@ -166,10 +144,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider value={{
       user,
       loading,
-      initiateRegister,
-      verifyRegisterOtp,
-      sendLoginOtp,
-      verifyLoginOtp,
+      register,
+      login,
       findAccount,
       logout,
       refreshUser,
