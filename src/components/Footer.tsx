@@ -70,7 +70,7 @@ export const Footer: React.FC = () => {
               <li><Link to="/products" className="hover:text-white transition">All Products Catalog</Link></li>
               <li><Link to="/orders" className="hover:text-white transition">Track Order & Proofs</Link></li>
               <li><Link to="/checkout" className="hover:text-white transition">My Cart</Link></li>
-              <li><Link to="/admin" className="hover:text-white transition">Admin Panel</Link></li>
+              
             </ul>
           </div>
 
@@ -82,7 +82,7 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2.5 text-xs text-slate-300">
               <li className="flex items-start space-x-2">
                 <MapPin className="w-4 h-4 text-brand-green shrink-0 mt-0.5" />
-                <span>PrinToday Print Hub, Okhla Industrial Area Phase-III, New Delhi 110020</span>
+                <span>1/117B, Jodhpur Park, Kolkata - 700068</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-brand-green shrink-0" />
@@ -90,7 +90,7 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-brand-green shrink-0" />
-                <span>GSTIN: 07AAAAA0000A1Z5</span>
+                <span>GSTIN: 19AACCZ6909Q1ZD</span>
               </li>
             </ul>
           </div>

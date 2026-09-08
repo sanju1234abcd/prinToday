@@ -3,7 +3,7 @@ import { PhoneCall, ShieldCheck, Truck, FileText } from 'lucide-react';
 
 export const NoticeBar: React.FC = () => {
   return (
-    <div className="bg-brand-navy text-white text-xs font-medium py-2 overflow-hidden border-b border-slate-800">
+    <div className="hidden sm:block bg-brand-navy text-white text-xs font-medium py-2 overflow-hidden border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
         {/* Mobile Marquee */}
         <div className="flex sm:hidden overflow-hidden whitespace-nowrap w-full">
@@ -14,7 +14,7 @@ export const NoticeBar: React.FC = () => {
             </span>
             <span className="flex items-center space-x-1">
               <FileText className="w-3.5 h-3.5 text-brand-green" />
-              <span>GSTIN: <strong className="text-white">07AAAAA0000A1Z5</strong></span>
+              <span>GSTIN: <strong className="text-white">19AACCZ6909Q1ZD</strong></span>
             </span>
             <span className="flex items-center space-x-1">
               <Truck className="w-3.5 h-3.5 text-brand-green" />
@@ -35,7 +35,7 @@ export const NoticeBar: React.FC = () => {
           </span>
           <span className="flex items-center space-x-1.5">
             <FileText className="w-3.5 h-3.5 text-brand-green" />
-            <span>GSTIN: <span className="font-mono text-white">07AAAAA0000A1Z5</span></span>
+            <span>GSTIN: <span className="font-mono text-white">19AACCZ6909Q1ZD</span></span>
           </span>
         </div>
 

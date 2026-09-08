@@ -55,7 +55,7 @@ export const Header: React.FC = () => {
               </button>
 
               <Link to="/" className="flex flex-shrink-0">
-                <Logo className="h-10 md:h-14 lg:h-16 w-auto" />
+                <Logo className="h-14 md:h-16 lg:h-18 w-auto" />
               </Link>
             </div>
 
@@ -128,8 +128,32 @@ export const Header: React.FC = () => {
               )}
             </div>
 
+            {/* Mobile Notice Marquee — above search bar via flex order */}
+            <div className="order-[5] w-full sm:hidden overflow-hidden whitespace-nowrap border-t border-b border-slate-100 py-1.5 px-1 bg-transparent">
+              <div className="animate-marquee flex items-center space-x-8 text-slate-500 text-[11px] font-medium">
+                <span className="flex items-center space-x-1">
+                  <span className="text-brand-green">📞</span>
+                  <span>Enquiry: <strong className="text-slate-700">+91 75950 31319</strong></span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <span className="text-brand-green">📄</span>
+                  <span>GSTIN: <strong className="text-slate-700">19AACCZ6909Q1ZD</strong></span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <span className="text-brand-green">🚚</span>
+                  <span>Free Express Delivery &gt; ₹999</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <span className="text-brand-green">✅</span>
+                  <span>100% Print Satisfaction Guarantee</span>
+                </span>
+              </div>
+            </div>
+
           </div>
         </div>
+
+
 
         {/* Desktop Category Sub-Nav Strip */}
         <div className="hidden md:block bg-slate-50 border-t border-slate-200/60">

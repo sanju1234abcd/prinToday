@@ -14,10 +14,10 @@ export const LandingPage: React.FC = () => {
      * Desktop (≥md): HeroSection FIRST (md:order-1), CoreCategoryGrid SECOND (md:order-2)
      */
     <main className="flex flex-col">
-      <div className="order-2 md:order-1">
+      <div className="order-2">
         <HeroSection />
       </div>
-      <div className="order-1 md:order-2">
+      <div className="order-1">
         <CoreCategoryGrid />
       </div>
       <div className="order-3">

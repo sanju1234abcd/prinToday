@@ -3,6 +3,25 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { Star, ChevronRight, SlidersHorizontal, ArrowRight, Check } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext';
 import { optimizeCloudinaryUrl } from '../utils/cloudinary';
+import { Product } from '../types';
+
+const getStartingPrice = (product: Product): number => {
+  let minPrice = product.basePrice;
+  if (!product.discountTiers || product.discountTiers.length === 0) return minPrice;
+  
+  for (const tier of product.discountTiers) {
+    let currentTierPrice = product.basePrice;
+    if (tier.discountType === 'PERCENTAGE') {
+      currentTierPrice = product.basePrice * (1 - tier.discountValue / 100);
+    } else if (tier.discountType === 'FLAT' || tier.discountType === 'FLAT_AMOUNT' as any) {
+      currentTierPrice = product.basePrice - tier.discountValue;
+    }
+    if (currentTierPrice < minPrice) {
+      minPrice = currentTierPrice;
+    }
+  }
+  return Math.max(0, Math.round(minPrice));
+};
 
 export const ProductsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -166,7 +185,7 @@ export const ProductsPage: React.FC = () => {
                       Starting At
                     </span>
                     <span className="text-base sm:text-lg font-extrabold text-brand-blue">
-                      ₹{product.basePrice}
+                      ₹{getStartingPrice(product)}
                       <span className="text-xs text-slate-500 font-normal">
                         {product.pricingType === 'per_sqft' ? ' / sq.ft' : ''}
                       </span>
