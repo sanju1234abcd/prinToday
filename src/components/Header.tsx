@@ -128,26 +128,16 @@ export const Header: React.FC = () => {
               )}
             </div>
 
-            {/* Mobile Notice Marquee — above search bar via flex order */}
-            <div className="order-[5] w-full sm:hidden overflow-hidden whitespace-nowrap border-t border-b border-slate-100 py-1.5 px-1 bg-transparent">
-              <div className="animate-marquee flex items-center space-x-8 text-slate-500 text-[11px] font-medium">
-                <span className="flex items-center space-x-1">
-                  <span className="text-brand-green">📞</span>
-                  <span>Enquiry: <strong className="text-slate-700">+91 75950 31319</strong></span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <span className="text-brand-green">📄</span>
-                  <span>GSTIN: <strong className="text-slate-700">19AACCZ6909Q1ZD</strong></span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <span className="text-brand-green">🚚</span>
-                  <span>Free Express Delivery &gt; ₹999</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <span className="text-brand-green">✅</span>
-                  <span>100% Print Satisfaction Guarantee</span>
-                </span>
-              </div>
+            {/* Mobile Notice Bar — static, above search bar via flex order */}
+            <div className="order-[5] w-full sm:hidden flex items-center justify-between border-t border-b border-slate-100 py-2 px-3 bg-transparent text-[12.5px] font-medium text-slate-600">
+              <span className="flex items-center gap-1.5">
+                <span className="text-brand-green">📄</span>
+                <span>GSTIN: <strong className="text-slate-800 font-mono">19AACCZ6909Q1ZD</strong></span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-brand-green">📞</span>
+                <span>Contact: <strong className="text-slate-800">+91 75950 31319</strong></span>
+              </span>
             </div>
 
           </div>

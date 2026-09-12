@@ -475,6 +475,7 @@ export const ProductDetailPage: React.FC = () => {
                     </button>
                   </div>
                 )}
+                <span className='text-sm text-slate-600'>Artwork not available? contact us for <a className='text-brand-blue font-bold' href="tel:+917595031319">free design</a></span>
               </div>
             )}
 

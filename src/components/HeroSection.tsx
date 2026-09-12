@@ -11,6 +11,7 @@ import {
   Printer,
   CheckCircle2
 } from 'lucide-react';
+import { BestSellersCarousel } from './BestSellersCarousel';
 
 export const HeroSection: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -79,15 +80,19 @@ export const HeroSection: React.FC = () => {
             >
               <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-brand-green/15 border border-brand-green/30 text-brand-green text-xs font-extrabold rounded-full">
                 <Zap className="w-3.5 h-3.5 fill-current" />
-                <span>Same-Day Dispatch</span>
-              </span>
-              <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-brand-blue-soft/10 border border-brand-blue-light/30 text-blue-300 text-xs font-extrabold rounded-full">
-                <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-                <span>Free Digital Proof</span>
+                <span>Same-day Delivery</span>
               </span>
               <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-extrabold rounded-full">
                 <Percent className="w-3.5 h-3.5 text-amber-400" />
                 <span>Bulk Discounts</span>
+              </span>
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-blue-500/15 border border-blue-500/30 text-blue-300 text-xs font-extrabold rounded-full">
+                <Percent className="w-3.5 h-3.5 text-blue-400" />
+                <span>GST Invoicing</span>
+              </span>
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-extrabold rounded-full">
+                <Percent className="w-3.5 h-3.5 text-purple-400" />
+                <span>pay after 30 days</span>
               </span>
             </div>
 
@@ -120,13 +125,6 @@ export const HeroSection: React.FC = () => {
                 <ArrowRight className="w-5 h-5" />
               </Link>
 
-              <Link
-                to="/subcategories?catId=cat-marketing"
-                className="w-full sm:w-auto px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm sm:text-base rounded-2xl border border-white/20 transition-all flex items-center justify-center space-x-2"
-              >
-                <Printer className="w-4 h-4 text-brand-green" />
-                <span>Order Flex Banners</span>
-              </Link>
             </div>
 
             {/* Trust Counter Section */}
@@ -173,49 +171,18 @@ export const HeroSection: React.FC = () => {
               <div className="glass-dark p-4 sm:p-6 rounded-3xl border border-white/15 shadow-2xl relative z-10 transform hover:rotate-1 transition-all duration-500">
                 <div className="relative rounded-2xl overflow-hidden aspect-[4/3] group">
                   <img
-                    src="https://images.unsplash.com/photo-1542744094-3a3121699479?auto=format&fit=crop&w=1000&q=80"
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRW9j5cYIr0wa32kEDosv9kzob_4w6sBBk16N_GF1pLYg&s=10"
                     alt="PrinToday Products Showcase"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex flex-col justify-end p-4">
-                    <span className="px-2.5 py-1 bg-brand-green text-white font-extrabold text-[11px] rounded-md self-start mb-1">
-                      1440 DPI HD PRINTING
-                    </span>
-                    <p className="text-white font-bold text-base sm:text-lg">
-                      Outdoor Flex Banners & Standees
-                    </p>
-                    <p className="text-slate-300 text-xs">
-                      Custom dimensions with live square footage price calculator.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Floating Product Badges */}
-                <div className="absolute -bottom-4 -left-4 bg-white text-slate-900 p-3 rounded-2xl shadow-xl flex items-center space-x-3 border border-slate-100">
-                  <div className="w-10 h-10 rounded-xl bg-brand-green/15 text-brand-green-dark flex items-center justify-center font-bold text-lg">
-                    ⚡
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold">24-Hour Dispatch</p>
-                    <p className="text-[10px] text-slate-500">Pan-India Express Shipping</p>
-                  </div>
-                </div>
-
-                <div className="absolute -top-4 -right-4 bg-brand-navy text-white p-3 rounded-2xl shadow-xl flex items-center space-x-3 border border-slate-700">
-                  <div className="w-9 h-9 rounded-xl bg-brand-blue flex items-center justify-center text-white font-bold text-sm">
-                    3D
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold">Live Proofing</p>
-                    <p className="text-[10px] text-slate-400">Free PDF Design Proof</p>
-                  </div>
-                </div>
-
+                  <span className='absolute top-4 left-4 text-white font-bold text-xl rounded-md bg-black/50 p-1'>
+                    Our Team
+                  </span>
+                </div> 
               </div>
 
             </div>
           </div>
-
         </div>
       </div>
     </section>

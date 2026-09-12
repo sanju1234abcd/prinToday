@@ -30,6 +30,14 @@ export const Logo: React.FC<{ className?: string }> = ({ className = '' }) => {
               fill: #000000;
               letter-spacing: 0.2px;
             }
+              .text-tagline2 {
+              font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              font-weight: 700;
+              font-style: italic;
+              font-size: 33.5px;
+              fill: #000000;
+              letter-spacing: 0.2px;
+            }
           `}
         </style>
       </defs>
@@ -44,8 +52,8 @@ export const Logo: React.FC<{ className?: string }> = ({ className = '' }) => {
           <tspan className="text-prin">Prin</tspan><tspan className="text-today">Today</tspan>
         </text>
 
-        <text x="350" y="158" className="text-tagline">Think it. Print it.</text>
       </g>
+      <text x="50" y="200" className="text-tagline2">By Zyflare Event Services PVT. LTD.</text>
     </svg>
   );
 };

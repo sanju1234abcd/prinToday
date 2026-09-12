@@ -23,13 +23,6 @@ const steps = [
   },
   {
     step: '03',
-    title: 'Approve Digital Proof',
-    description: 'Receive a free high-res 2D digital proof via WhatsApp/Email. Printing commences after your final signal.',
-    icon: <CheckCircle2 className="w-6 h-6 text-purple-600" />,
-    color: 'border-purple-600 bg-purple-50'
-  },
-  {
-    step: '04',
     title: 'Fast Doorstep Delivery',
     description: 'Damage-proof reinforced packaging dispatched via express priority shipping right to your location.',
     icon: <Truck className="w-6 h-6 text-emerald-600" />,
@@ -75,7 +68,7 @@ export const HowItWorksTimeline: React.FC = () => {
             Seamless Process
           </span>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-            How PrinToday Works in 4 Easy Steps
+            How PrinToday Works in 3 Easy Steps
           </h2>
           <p className="text-slate-400 text-xs sm:text-sm mt-2">
             From design upload to final delivery, experience India’s most hassle-free print platform.

@@ -3,17 +3,17 @@ import { Category, Subcategory, Product, Order } from '../types';
 // ── Real MongoDB IDs — seeded via scripts/seedCatalog.ts ─────────────────────
 export const MOCK_CATEGORIES: Category[] = [
   {
-    id: '6a84960e7003f2bf9724c01b',
-    name: 'Wedding Essentials',
-    slug: 'wedding-essentials',
-    description: 'All kinds of Wedding Invitation Cards, Menus, Decor, & Management.',
-    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
-    iconName: 'Sparkles',
+    id: '6a84960e7003f2bf9724c01d',
+    name: 'Business & Office essentials',
+    slug: 'business-office',
+    description: 'Visiting Cards, Letterheads, Bill Books, Stamps, ID Cards & Packaging.',
+    image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Briefcase',
     productCount: 0
   },
   {
     id: '6a84960e7003f2bf9724c01c',
-    name: 'Brand Marketing & Events',
+    name: 'Brand Marketing & Event Materials',
     slug: 'brand-marketing-events',
     description: 'Banners, Flyers, Promo Tables, Canopies, T-Shirts & Full Event Management.',
     image: 'https://images.unsplash.com/photo-1542744094-3a3121699479?auto=format&fit=crop&w=800&q=80',
@@ -21,12 +21,12 @@ export const MOCK_CATEGORIES: Category[] = [
     productCount: 0
   },
   {
-    id: '6a84960e7003f2bf9724c01d',
-    name: 'All About Business & Office',
-    slug: 'business-office',
-    description: 'Visiting Cards, Letterheads, Bill Books, Stamps, ID Cards & Packaging.',
-    image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=800&q=80',
-    iconName: 'Briefcase',
+    id: '6a84960e7003f2bf9724c01b',
+    name: 'Wedding Essentials',
+    slug: 'wedding-essentials',
+    description: 'All kinds of Wedding Invitation Cards, Menus, Decor, & Management.',
+    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
+    iconName: 'Sparkles',
     productCount: 0
   },
   {
