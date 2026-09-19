@@ -92,7 +92,7 @@ export const MOCK_SUBCATEGORIES: Subcategory[] = [
   { id: '6a84964b35e452ed1bd9c8ec', categoryId: '6a84960e7003f2bf9724c01e', name: 'Personalized Notebook', slug: 'personal-personalized-notebook', description: '', image: 'https://drive.google.com/thumbnail?id=19K0IGlbm4W-s-S5gQN1hpHenWdjyohi4&sz=w1000' },
   { id: '6a84964b35e452ed1bd9c8ed', categoryId: '6a84960e7003f2bf9724c01e', name: 'Personalized Calendar', slug: 'personal-personalized-calendar', description: '', image: 'https://drive.google.com/thumbnail?id=1nghHVbEcUL9MCF7QjSlbxcEdQN3k-zyZ&sz=w1000' },
   { id: '6a84964b35e452ed1bd9c8ee', categoryId: '6a84960e7003f2bf9724c01e', name: 'Cushions', slug: 'personal-cushions', description: '', image: 'https://drive.google.com/thumbnail?id=197fmS5SK3T62uA7NXfmuUogpsEyu76G8&sz=w1000' },
-  { id: '6a84964b35e452ed1bd9c8f0', categoryId: '6a84960e7003f2bf9724c01e', name: 'T-Shirt', slug: 'personal-t-shirt', description: '', image: '' },
+  { id: '6a84964b35e452ed1bd9c8f0', categoryId: '6a84960e7003f2bf9724c01e', name: 'T-Shirt', slug: 'personal-t-shirt', description: '', image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwoBB_OddF9j4SYR7D-K43wp69z6-wOSI5oI8UFCBLwg&s=10' },
 ];
 
 export const MOCK_PRODUCTS: Product[] = [

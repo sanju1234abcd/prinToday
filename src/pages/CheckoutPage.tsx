@@ -41,8 +41,6 @@ export const CheckoutPage: React.FC = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('FULL');
-  const [utrNumber, setUtrNumber] = useState('');
-  const [showUpiModal, setShowUpiModal] = useState(false);
   const [locLoading, setLocLoading] = useState(false);
 
   // Coupon State
@@ -129,7 +127,7 @@ export const CheckoutPage: React.FC = () => {
   }
 
   const paymentOptions: PaymentOption[] = [
-    { id: 'FULL', label: 'UPI / Online Payment (Full)', disabled: false }
+    { id: 'FULL', label: '100% Advance Payment', disabled: false }
   ];
 
   if (user?.accountType === 'INDIVIDUAL' && user.individual?.creditEligible) {
@@ -162,16 +160,6 @@ export const CheckoutPage: React.FC = () => {
     e.preventDefault();
     if (cart.length === 0) return;
 
-    if ((paymentMethod === 'FULL' || paymentMethod === '50_PERCENT_ADVANCE') && !showUpiModal) {
-      setShowUpiModal(true);
-      return;
-    }
-
-    if ((paymentMethod === 'FULL' || paymentMethod === '50_PERCENT_ADVANCE') && !utrNumber) {
-      alert("Please enter the UTR / Transaction Reference Number.");
-      return;
-    }
-
     // backend paymentMethod enum is 'RAZORPAY', 'COD', '30_DAYS_CREDIT'
     const backendPaymentMethod = paymentMethod === 'ORG_CREDIT' ? '30_DAYS_CREDIT' : 'RAZORPAY';
 
@@ -181,8 +169,7 @@ export const CheckoutPage: React.FC = () => {
         cart, 
         backendPaymentMethod, 
         appliedCoupon?.code, 
-        paymentMethod, 
-        utrNumber
+        paymentMethod
       );
       clearCart();
       navigate('/order-success', { state: { order: createdOrder } });
@@ -604,77 +591,18 @@ export const CheckoutPage: React.FC = () => {
                   <span>
                     {paymentMethod === 'ORG_CREDIT' 
                       ? 'Place Order on 30-Day Credit' 
-                      : 'Place Order & Generate Receipt'}
+                      : 'Place Order'}
                   </span>
                 </button>
-
+                <p className="text-[11px] text-center font-bold text-slate-500">
+                  Our team will contact you for payment via WhatsApp/Call.
+                </p>
               </div>
 
             </div>
 
           </form>
         )}
-
-        {/* UPI QR Modal */}
-        {showUpiModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative space-y-4">
-              <button 
-                type="button"
-                onClick={() => setShowUpiModal(false)} 
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              
-              <div className="text-center space-y-1">
-                <h3 className="text-xl font-extrabold text-slate-900">Scan to Pay</h3>
-                <p className="text-xs text-slate-500 font-medium">PrinToday UPI Payment</p>
-              </div>
-
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col items-center justify-center">
-                <img 
-                  src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" 
-                  alt="UPI QR Code" 
-                  className="w-48 h-48 rounded-lg mb-4"
-                />
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">UPI ID</p>
-                <p className="text-sm font-extrabold text-brand-navy bg-white px-3 py-1.5 rounded-lg border border-slate-200">
-                  printoday@upi
-                </p>
-              </div>
-
-              <div className="text-center bg-brand-green/10 py-3 rounded-xl border border-brand-green/20">
-                <p className="text-[10px] font-bold text-brand-green uppercase tracking-wider mb-0.5">Amount to Pay</p>
-                <p className="text-2xl font-extrabold text-brand-green">
-                  ₹{(paymentMethod === '50_PERCENT_ADVANCE' ? Math.round(grandTotal * 0.5) : grandTotal).toLocaleString()}
-                </p>
-              </div>
-
-              <div className="pt-2">
-                <label className="text-xs font-bold text-slate-700 block mb-1">Enter UTR / Reference No. <span className="text-rose-500">*</span></label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. 301234567890"
-                  value={utrNumber}
-                  onChange={e => setUtrNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-blue outline-none"
-                />
-              </div>
-
-              <button
-                type="button"
-                onClick={handleSubmitOrder}
-                disabled={!utrNumber}
-                className="w-full py-3.5 bg-brand-blue text-white font-extrabold text-sm rounded-xl hover:bg-brand-navy transition-colors disabled:opacity-50"
-              >
-                I have Paid & Confirm Order
-              </button>
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );
