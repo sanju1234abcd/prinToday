@@ -21,7 +21,10 @@ import {
   Search,
   Building2,
   Check,
-  Ban
+  Ban,
+  Users,
+  ShieldCheck,
+  ShieldOff
 } from 'lucide-react';
 import { useOrders } from '../context/OrderContext';
 import { useCatalog } from '../context/CatalogContext';
@@ -35,11 +38,29 @@ export const AdminPage: React.FC = () => {
   const { fetchAdminOrders, updateOrderStatus } = useOrders();
   const { categories, subcategories, products, refreshCatalog } = useCatalog();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'approvals'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'approvals' | 'users'>('orders');
   const [pendingOrgs, setPendingOrgs] = useState<UserProfile[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [adminOrders, setAdminOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Users tab state
+  const [adminUsers, setAdminUsers] = useState<any[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userTotal, setUserTotal] = useState(0);
+  const [userPage, setUserPage] = useState(1);
+  const [userSearch, setUserSearch] = useState('');
+  const [userAccountTypeFilter, setUserAccountTypeFilter] = useState('ALL');
+  const [userBanFilter, setUserBanFilter] = useState('ALL');
+  const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [editUserRole, setEditUserRole] = useState<'USER' | 'ADMIN'>('USER');
+  const [editUserName, setEditUserName] = useState('');
+  const [editUserCompany, setEditUserCompany] = useState('');
+  const [editUserContact, setEditUserContact] = useState('');
+  const [editUserVerification, setEditUserVerification] = useState('PENDING');
+  const [editUserCredit, setEditUserCredit] = useState(false);
+  const [savingUser, setSavingUser] = useState(false);
+  const USER_LIMIT = 15;
 
   // Filter States
   const [dateFilter, setDateFilter] = useState('');
@@ -114,6 +135,97 @@ export const AdminPage: React.FC = () => {
     };
     if (activeTab === 'approvals') loadOrgs();
   }, [activeTab]);
+
+  // Load users when tab changes or filters change
+  const loadUsers = async (page = 1) => {
+    setLoadingUsers(true);
+    try {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(USER_LIMIT),
+        ...(userSearch && { search: userSearch }),
+        ...(userAccountTypeFilter !== 'ALL' && { accountType: userAccountTypeFilter }),
+        ...(userBanFilter !== 'ALL' && { isBanned: userBanFilter === 'BANNED' ? 'true' : 'false' }),
+      });
+      const res = await fetch(`${API}/admin/users?${params}`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setAdminUsers(data.data || []);
+        setUserTotal(data.total || 0);
+        setUserPage(page);
+      }
+    } catch (err) {
+      console.error('Failed to load users', err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'users') loadUsers(1);
+  }, [activeTab, userAccountTypeFilter, userBanFilter]);
+
+  const handleUserSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeTab === 'users') loadUsers(1);
+  };
+
+  const handleOpenEditUser = (u: any) => {
+    setEditingUser(u);
+    setEditUserRole(u.role);
+    setEditUserName(u.individual?.name || '');
+    setEditUserCompany(u.organization?.companyName || '');
+    setEditUserContact(u.organization?.contactName || '');
+    setEditUserVerification(u.organization?.physicalVerificationStatus || 'PENDING');
+    setEditUserCredit(u.organization?.creditEligible || false);
+  };
+
+  const handleSaveUser = async () => {
+    if (!editingUser) return;
+    setSavingUser(true);
+    try {
+      const body: Record<string, any> = { role: editUserRole };
+      if (editingUser.accountType === 'INDIVIDUAL') {
+        body['individual.name'] = editUserName;
+      } else {
+        body['organization.companyName'] = editUserCompany;
+        body['organization.contactName'] = editUserContact;
+        body['organization.physicalVerificationStatus'] = editUserVerification;
+        body['organization.creditEligible'] = editUserCredit;
+      }
+      const res = await fetch(`${API}/admin/users/${editingUser._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      setAdminUsers(prev => prev.map(u => u._id === editingUser._id ? updated.data : u));
+      setEditingUser(null);
+    } catch {
+      alert('Failed to save user changes.');
+    } finally {
+      setSavingUser(false);
+    }
+  };
+
+  const handleToggleBan = async (u: any) => {
+    if (!confirm(`${u.isBanned ? 'Unban' : 'Ban'} this user?`)) return;
+    try {
+      const res = await fetch(`${API}/admin/users/${u._id}/ban`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isBanned: !u.isBanned }),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      setAdminUsers(prev => prev.map(usr => usr._id === u._id ? updated.data : usr));
+    } catch {
+      alert('Failed to toggle ban status.');
+    }
+  };
 
   const handleVerifyOrg = async (orgId: string, status: 'VERIFIED' | 'REJECTED', creditEligible: boolean) => {
     try {
@@ -417,6 +529,18 @@ export const AdminPage: React.FC = () => {
               {pendingOrgs.length > 0 && (
                 <span className="ml-1 px-1.5 py-0.5 bg-rose-500 text-white rounded-full text-[9px]">{pendingOrgs.length}</span>
               )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition flex items-center space-x-2 ${
+                activeTab === 'users'
+                  ? 'bg-white text-brand-blue shadow'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-4 h-4 text-violet-600" />
+              <span>Users ({userTotal})</span>
             </button>
           </div>
         </div>
@@ -1302,6 +1426,281 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* TAB 4: USER MANAGEMENT */}
+        {activeTab === 'users' && (
+          <div className="space-y-4">
+            {/* Header + Filters */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
+              <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                    <Users className="w-5 h-5 text-violet-600" />
+                    <span>User Management</span>
+                  </h2>
+                  <span className="text-xs text-slate-500 font-medium">
+                    {userTotal} total users · Page {userPage} of {Math.ceil(userTotal / USER_LIMIT) || 1}
+                  </span>
+                </div>
+
+                {/* Search */}
+                <form onSubmit={handleUserSearch} className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search name, email, phone…"
+                      value={userSearch}
+                      onChange={e => setUserSearch(e.target.value)}
+                      className="pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-300 w-56"
+                    />
+                  </div>
+                  <button type="submit" className="px-4 py-2 bg-violet-600 text-white text-xs font-bold rounded-xl hover:bg-violet-700 transition">
+                    Search
+                  </button>
+                </form>
+              </div>
+
+              {/* Filter Row */}
+              <div className="px-6 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap gap-3 items-center">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-semibold text-slate-500">Account Type:</span>
+                  {['ALL', 'INDIVIDUAL', 'ORGANIZATION'].map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setUserAccountTypeFilter(t)}
+                      className={`px-3 py-1 rounded-lg text-[11px] font-bold transition ${userAccountTypeFilter === t ? 'bg-violet-600 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:border-violet-300'}`}
+                    >
+                      {t === 'ALL' ? 'All' : t === 'INDIVIDUAL' ? 'Individual' : 'Organization'}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center space-x-2 ml-4">
+                  <span className="text-xs font-semibold text-slate-500">Status:</span>
+                  {[['ALL', 'All'], ['ACTIVE', 'Active'], ['BANNED', 'Banned']].map(([val, label]) => (
+                    <button
+                      key={val}
+                      onClick={() => setUserBanFilter(val)}
+                      className={`px-3 py-1 rounded-lg text-[11px] font-bold transition ${userBanFilter === val ? (val === 'BANNED' ? 'bg-rose-600 text-white' : 'bg-violet-600 text-white') : 'bg-white border border-slate-200 text-slate-600 hover:border-violet-300'}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Table */}
+              <div className="overflow-x-auto">
+                {loadingUsers ? (
+                  <div className="flex justify-center py-12">
+                    <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : adminUsers.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-sm font-semibold">No users found.</div>
+                ) : (
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-100">
+                        <th className="px-6 py-3 font-bold">User</th>
+                        <th className="px-4 py-3 font-bold">Contact</th>
+                        <th className="px-4 py-3 font-bold">Type</th>
+                        <th className="px-4 py-3 font-bold">Role</th>
+                        <th className="px-4 py-3 font-bold">Status</th>
+                        <th className="px-4 py-3 font-bold">Joined</th>
+                        <th className="px-4 py-3 font-bold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {adminUsers.map(u => {
+                        const displayName = u.accountType === 'INDIVIDUAL'
+                          ? (u.individual?.name || '—')
+                          : (u.organization?.companyName || '—');
+                        const isBanned = u.isBanned;
+                        return (
+                          <tr key={u._id} className={`hover:bg-slate-50 transition ${isBanned ? 'opacity-60' : ''}`}>
+                            <td className="px-6 py-3">
+                              <div className="font-bold text-slate-900 flex items-center gap-2">
+                                <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold ${u.accountType === 'ORGANIZATION' ? 'bg-brand-navy' : 'bg-violet-500'}`}>
+                                  {displayName.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="line-clamp-1">{displayName}</span>
+                              </div>
+                              <div className="text-slate-400 mt-0.5 pl-9">{u.email}</div>
+                            </td>
+                            <td className="px-4 py-3 text-slate-500">{u.mobileNumber || '—'}</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${u.accountType === 'ORGANIZATION' ? 'bg-brand-navy/10 text-brand-navy' : 'bg-violet-100 text-violet-700'}`}>
+                                {u.accountType === 'ORGANIZATION' ? 'Org' : 'Individual'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${u.role === 'ADMIN' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                                {u.role}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              {isBanned ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-100 text-rose-700 rounded-full text-[10px] font-bold">
+                                  <Ban className="w-3 h-3" /> Banned
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold">
+                                  <ShieldCheck className="w-3 h-3" /> Active
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+                              {new Date(u.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit' })}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleOpenEditUser(u)}
+                                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-brand-blue hover:text-white text-slate-600 transition"
+                                  title="Edit user"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleToggleBan(u)}
+                                  className={`p-1.5 rounded-lg transition ${isBanned ? 'bg-emerald-100 hover:bg-emerald-500 hover:text-white text-emerald-700' : 'bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-700'}`}
+                                  title={isBanned ? 'Unban user' : 'Ban user'}
+                                >
+                                  {isBanned ? <ShieldCheck className="w-3.5 h-3.5" /> : <Ban className="w-3.5 h-3.5" />}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {userTotal > USER_LIMIT && (
+                <div className="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs text-slate-400">
+                    Showing {(userPage - 1) * USER_LIMIT + 1}–{Math.min(userPage * USER_LIMIT, userTotal)} of {userTotal}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => loadUsers(userPage - 1)}
+                      disabled={userPage <= 1}
+                      className="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      ← Prev
+                    </button>
+                    <button
+                      onClick={() => loadUsers(userPage + 1)}
+                      disabled={userPage >= Math.ceil(userTotal / USER_LIMIT)}
+                      className="px-3 py-1.5 text-xs font-bold border border-slate-200 rounded-xl hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Edit User Modal */}
+            {editingUser && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 space-y-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                      <Edit className="w-4 h-4 text-brand-blue" />
+                      Edit User
+                    </h3>
+                    <button onClick={() => setEditingUser(null)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 transition">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-xs text-slate-400">Email</p>
+                    <p className="text-sm font-semibold text-slate-700 bg-slate-50 rounded-xl px-3 py-2">{editingUser.email}</p>
+                  </div>
+
+                  {/* Role */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Role</label>
+                    <div className="flex gap-2">
+                      {(['USER', 'ADMIN'] as const).map(r => (
+                        <button
+                          key={r}
+                          onClick={() => setEditUserRole(r)}
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold transition border ${editUserRole === r ? 'bg-brand-navy text-white border-brand-navy' : 'bg-white border-slate-200 text-slate-600 hover:border-brand-navy'}`}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Individual fields */}
+                  {editingUser.accountType === 'INDIVIDUAL' && (
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-600">Full Name</label>
+                      <input
+                        value={editUserName}
+                        onChange={e => setEditUserName(e.target.value)}
+                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                        placeholder="Full name"
+                      />
+                    </div>
+                  )}
+
+                  {/* Organization fields */}
+                  {editingUser.accountType === 'ORGANIZATION' && (
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600">Company Name</label>
+                        <input value={editUserCompany} onChange={e => setEditUserCompany(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-blue" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600">Contact Name</label>
+                        <input value={editUserContact} onChange={e => setEditUserContact(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-blue" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600">Verification Status</label>
+                        <select value={editUserVerification} onChange={e => setEditUserVerification(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-blue">
+                          <option value="PENDING">Pending</option>
+                          <option value="VERIFIED">Verified</option>
+                          <option value="REJECTED">Rejected</option>
+                        </select>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-600">Credit Eligible</label>
+                        <button
+                          onClick={() => setEditUserCredit(v => !v)}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${editUserCredit ? 'bg-brand-green' : 'bg-slate-300'}`}
+                        >
+                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${editUserCredit ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-2">
+                    <button onClick={() => setEditingUser(null)} className="flex-1 py-2.5 border border-slate-200 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveUser}
+                      disabled={savingUser}
+                      className="flex-1 py-2.5 bg-gradient-to-r from-brand-blue to-brand-navy text-white rounded-2xl text-xs font-bold hover:opacity-90 transition disabled:opacity-60 flex items-center justify-center gap-2"
+                    >
+                      {savingUser ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save className="w-4 h-4" />}
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

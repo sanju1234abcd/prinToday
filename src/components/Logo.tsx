@@ -4,7 +4,7 @@ export const Logo: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 600 220" 
+      viewBox="0 0 665 220" 
       className={className}
     >
       <defs>
@@ -53,7 +53,7 @@ export const Logo: React.FC<{ className?: string }> = ({ className = '' }) => {
         </text>
 
       </g>
-      <text x="50" y="200" className="text-tagline2">By Zyflare Event Services PVT. LTD.</text>
+      <text x="50" y="200" className="text-tagline2">BY ZYFLARE EVENT SERVICES PVT. LTD.</text>
     </svg>
   );
 };

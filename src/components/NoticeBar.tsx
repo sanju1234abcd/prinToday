@@ -10,7 +10,7 @@ export const NoticeBar: React.FC = () => {
           <div className="animate-marquee flex items-center space-x-8 text-slate-300">
             <span className="flex items-center space-x-1">
               <PhoneCall className="w-3.5 h-3.5 text-brand-green" />
-              <span>For Enquiry Call: <strong className="text-white">+91 75950 31319</strong></span>
+              <span>For Enquiry Call: <strong className="text-white">9432954099</strong></span>
             </span>
             <span className="flex items-center space-x-1">
               <FileText className="w-3.5 h-3.5 text-brand-green" />
@@ -31,7 +31,7 @@ export const NoticeBar: React.FC = () => {
         <div className="hidden sm:flex items-center space-x-6 text-slate-300">
           <span className="flex items-center space-x-1.5">
             <PhoneCall className="w-3.5 h-3.5 text-brand-green" />
-            <span>Hotline: <a href="tel:+917595031319" className="hover:text-brand-green font-semibold text-white transition">+91 75950 31319</a></span>
+            <span>Hotline: <a href="tel:9432954099" className="hover:text-brand-green font-semibold text-white transition">9432954099</a></span>
           </span>
           <span className="flex items-center space-x-1.5">
             <FileText className="w-3.5 h-3.5 text-brand-green" />
@@ -43,10 +43,6 @@ export const NoticeBar: React.FC = () => {
           <span className="flex items-center space-x-1.5">
             <Truck className="w-3.5 h-3.5 text-brand-green" />
             <span>Free Shipping &gt; ₹999</span>
-          </span>
-          <span className="flex items-center space-x-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-brand-green" />
-            <span>Free 2D Digital Proofing</span>
           </span>
         </div>
       </div>

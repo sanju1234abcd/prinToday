@@ -39,6 +39,8 @@ export const SubcategoriesPage: React.FC = () => {
               src={currentCategory.image}
               alt={currentCategory.name}
               className="w-full h-full object-cover"
+              referrerPolicy='no-referrer'
+              loading='lazy'
             />
           </div>
         </div>

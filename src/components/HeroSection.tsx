@@ -171,9 +171,10 @@ export const HeroSection: React.FC = () => {
               <div className="glass-dark p-4 sm:p-6 rounded-3xl border border-white/15 shadow-2xl relative z-10 transform hover:rotate-1 transition-all duration-500">
                 <div className="relative rounded-2xl overflow-hidden aspect-[4/3] group">
                   <img
-                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRW9j5cYIr0wa32kEDosv9kzob_4w6sBBk16N_GF1pLYg&s=10"
+                    src="https://drive.google.com/thumbnail?id=1sMxJRBK_yx-0SaP70VM211112f-QRs8O&sz=w1000"
                     alt="PrinToday Products Showcase"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    referrerPolicy='no-referrer'
                   />
                   <span className='absolute top-4 left-4 text-white font-bold text-xl rounded-md bg-black/50 p-1'>
                     Our Team

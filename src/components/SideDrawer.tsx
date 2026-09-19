@@ -226,7 +226,7 @@ export const SideDrawer: React.FC<SideDrawerProps> = ({ isOpen, onClose }) => {
         </div>
         <div>
           <p className="font-bold text-slate-900 text-xs">Customer Support</p>
-          <p className="text-brand-blue font-semibold text-xs">+91 75950 31319</p>
+          <p className="text-brand-blue font-semibold text-xs">9432954099</p>
         </div>
       </div>
       <ShieldCheck className="w-5 h-5 text-brand-green opacity-70" />

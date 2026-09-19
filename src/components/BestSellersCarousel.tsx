@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Star, Zap, ChevronRight, ArrowRight } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext';
 import { optimizeCloudinaryUrl } from '../utils/cloudinary';
+import { getStartingPrice } from '../utils/pricing';
 
 export const BestSellersCarousel: React.FC = () => {
   const { products } = useCatalog();
@@ -83,7 +84,7 @@ export const BestSellersCarousel: React.FC = () => {
                       Starting At
                     </span>
                     <span className="text-base sm:text-lg font-extrabold text-brand-blue">
-                      ₹{product.basePrice}
+                      ₹{getStartingPrice(product)}
                       <span className="text-xs text-slate-500 font-normal">
                         {product.pricingType === 'per_sqft' ? ' / sq.ft' : ''}
                       </span>

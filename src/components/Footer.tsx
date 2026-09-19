@@ -23,7 +23,7 @@ export const Footer: React.FC = () => {
             {/* WhatsApp & Call Actions */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
-                href="https://wa.me/917595031319"
+                href="https://wa.me/919432954099"
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center space-x-2 transition shadow-md"
@@ -32,11 +32,11 @@ export const Footer: React.FC = () => {
                 <span>WhatsApp Order Support</span>
               </a>
               <a
-                href="tel:+917595031319"
+                href="tel:9432954099"
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl flex items-center space-x-2 transition border border-white/15"
               >
                 <Phone className="w-4 h-4 text-brand-green" />
-                <span>+91 75950 31319</span>
+                <span>9432954099</span>
               </a>
             </div>
           </div>
@@ -86,7 +86,7 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-brand-green shrink-0" />
-                <span>support@printoday.in</span>
+                <span>support.printoday@zyflare.com</span>
               </li>
               <li className="flex items-center space-x-2">
                 <Phone className="w-4 h-4 text-brand-green shrink-0" />
