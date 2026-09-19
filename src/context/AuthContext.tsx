@@ -10,6 +10,7 @@ export interface UserProfile {
   mobileNumber?: string;
   individual?: {
     name: string;
+    creditEligible?: boolean;
     address?: {
       houseNo: string;
       buildingName?: string;
@@ -126,6 +127,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     await fetch(`${API}/auth/logout`, { method: 'POST', credentials: 'include' });
     setUser(null);
+    localStorage.removeItem('printoday_cart');
+    // We optionally reload to reset all states
+    window.location.href = '/';
   };
 
   const updateProfile = async (payload: { individual?: any, organization?: any }) => {

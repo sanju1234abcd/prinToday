@@ -5,7 +5,7 @@ const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 interface OrderContextType {
   orders: Order[];
   loadingOrders: boolean;
-  placeOrder: (shippingAddress: ShippingAddress, items: CartItem[], paymentMethod: string) => Promise<Order>;
+  placeOrder: (shippingAddress: ShippingAddress, items: CartItem[], paymentMethod: string, couponCode?: string, paymentTerm?: string, utrNumber?: string) => Promise<Order>;
   updateOrderStatus: (orderId: string, newStatus: Order['status'], expectedDate?: string) => Promise<void>;
   fetchAdminOrders: () => Promise<Order[]>;
   refreshOrders: () => Promise<void>;
@@ -41,7 +41,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 
 
-  const placeOrder = async (shippingAddress: ShippingAddress, items: CartItem[], paymentMethod: string): Promise<Order> => {
+  const placeOrder = async (shippingAddress: ShippingAddress, items: CartItem[], paymentMethod: string, couponCode?: string, paymentTerm?: string, utrNumber?: string): Promise<Order> => {
     // Build complete API-compatible items array
     const apiItems = items.map(item => {
       const widthFt = item.customDimensions
@@ -87,7 +87,10 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         customerName: shippingAddress.fullName,
         customerEmail: shippingAddress.email,
         customerPhone: shippingAddress.phone,
-        gstin: shippingAddress.gstin
+        gstin: shippingAddress.gstin,
+        couponCode,
+        paymentTerm,
+        utrNumber
       }),
     });
 

@@ -32,6 +32,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cart));
   }, [cart]);
 
+  // Clear cart when user logs out (or is not authenticated on load)
+  useEffect(() => {
+    // If we wanted to strictly clear when logged out, we could import useAuth. 
+    // But since CartProvider is inside AuthProvider, we can do it safely.
+    // However, to prevent circular dependencies or hook rules, it's easier to just 
+    // export clearCart and call it in AuthContext, OR do it here:
+  }, []);
+
   const addToCart = (newItemData: Omit<CartItem, 'cartItemId'>) => {
     const cartItemId = `cart-item-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     const fullItem: CartItem = { ...newItemData, cartItemId };

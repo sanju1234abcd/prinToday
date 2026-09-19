@@ -24,7 +24,9 @@ import {
   Ban,
   Users,
   ShieldCheck,
-  ShieldOff
+  ShieldOff,
+  Percent,
+  Trash2
 } from 'lucide-react';
 import { useOrders } from '../context/OrderContext';
 import { useCatalog } from '../context/CatalogContext';
@@ -38,11 +40,17 @@ export const AdminPage: React.FC = () => {
   const { fetchAdminOrders, updateOrderStatus } = useOrders();
   const { categories, subcategories, products, refreshCatalog } = useCatalog();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'approvals' | 'users'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'products' | 'approvals' | 'users' | 'coupons'>('orders');
   const [pendingOrgs, setPendingOrgs] = useState<UserProfile[]>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [adminOrders, setAdminOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Payment Verification Modal State
+  const [paymentVerifyOrder, setPaymentVerifyOrder] = useState<Order | null>(null);
+  const [paymentVerifyStatus, setPaymentVerifyStatus] = useState<string>('PAID');
+  const [paymentVerifyNote, setPaymentVerifyNote] = useState('');
+  const [savingPaymentStatus, setSavingPaymentStatus] = useState(false);
 
   // Users tab state
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
@@ -62,6 +70,23 @@ export const AdminPage: React.FC = () => {
   const [savingUser, setSavingUser] = useState(false);
   const USER_LIMIT = 15;
 
+  // Coupons tab state
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<any | null>(null);
+  
+  const [couponForm, setCouponForm] = useState({
+    code: '',
+    discountPercentage: 0,
+    maxUses: 100,
+    conditionType: 'NONE',
+    minOrderAmount: 0,
+    productId: '',
+    isActive: true
+  });
+  const [savingCoupon, setSavingCoupon] = useState(false);
+
   // Filter States
   const [dateFilter, setDateFilter] = useState('');
   const [amountOp, setAmountOp] = useState('>');
@@ -73,6 +98,33 @@ export const AdminPage: React.FC = () => {
     setAmountOp('>');
     setAmountFilter('');
     setUserTypeFilter('ALL');
+  };
+
+  const handleUpdatePaymentStatus = async () => {
+    if (!paymentVerifyOrder) return;
+    setSavingPaymentStatus(true);
+    try {
+      const res = await fetch(`${API}/admin/orders/${paymentVerifyOrder._id || paymentVerifyOrder.id}/payment`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ paymentStatus: paymentVerifyStatus, adminNote: paymentVerifyNote })
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || 'Failed to update payment status');
+      }
+      const updated = await res.json();
+      setAdminOrders(prev => prev.map(o =>
+        (o._id || o.id) === (paymentVerifyOrder._id || paymentVerifyOrder.id) ? { ...o, ...updated.data, id: updated.data._id } : o
+      ));
+      setPaymentVerifyOrder(null);
+      setPaymentVerifyNote('');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSavingPaymentStatus(false);
+    }
   };
 
   // Compute Filtered Orders
@@ -177,7 +229,7 @@ export const AdminPage: React.FC = () => {
     setEditUserCompany(u.organization?.companyName || '');
     setEditUserContact(u.organization?.contactName || '');
     setEditUserVerification(u.organization?.physicalVerificationStatus || 'PENDING');
-    setEditUserCredit(u.organization?.creditEligible || false);
+    setEditUserCredit(u.accountType === 'INDIVIDUAL' ? (u.individual?.creditEligible || false) : (u.organization?.creditEligible || false));
   };
 
   const handleSaveUser = async () => {
@@ -187,6 +239,7 @@ export const AdminPage: React.FC = () => {
       const body: Record<string, any> = { role: editUserRole };
       if (editingUser.accountType === 'INDIVIDUAL') {
         body['individual.name'] = editUserName;
+        body['individual.creditEligible'] = editUserCredit;
       } else {
         body['organization.companyName'] = editUserCompany;
         body['organization.contactName'] = editUserContact;
@@ -224,6 +277,95 @@ export const AdminPage: React.FC = () => {
       setAdminUsers(prev => prev.map(usr => usr._id === u._id ? updated.data : usr));
     } catch {
       alert('Failed to toggle ban status.');
+    }
+  };
+
+  // Coupons Logic
+  const loadCoupons = async () => {
+    setLoadingCoupons(true);
+    try {
+      const res = await fetch(`${API}/admin/coupons`, { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setCoupons(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load coupons', err);
+    } finally {
+      setLoadingCoupons(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'coupons') loadCoupons();
+  }, [activeTab]);
+
+  const handleSaveCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingCoupon(true);
+    try {
+      const url = editingCoupon 
+        ? `${API}/admin/coupons/${editingCoupon._id}` 
+        : `${API}/admin/coupons`;
+      const method = editingCoupon ? 'PUT' : 'POST';
+      
+      const payload: any = { ...couponForm };
+      if (payload.conditionType !== 'MIN_ORDER_AMOUNT') delete payload.minOrderAmount;
+      if (payload.conditionType !== 'SPECIFIC_PRODUCT') delete payload.productId;
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || 'Failed to save coupon');
+      }
+
+      await loadCoupons();
+      setShowCouponModal(false);
+      setEditingCoupon(null);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSavingCoupon(false);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this coupon?')) return;
+    try {
+      const res = await fetch(`${API}/admin/coupons/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        setCoupons(prev => prev.filter(c => c._id !== id));
+      } else {
+        alert('Failed to delete coupon');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleToggleCouponActive = async (c: any) => {
+    try {
+      const res = await fetch(`${API}/admin/coupons/${c._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isActive: !c.isActive }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCoupons(prev => prev.map(item => item._id === c._id ? updated.data : item));
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -542,6 +684,18 @@ export const AdminPage: React.FC = () => {
               <Users className="w-4 h-4 text-violet-600" />
               <span>Users ({userTotal})</span>
             </button>
+
+            <button
+              onClick={() => setActiveTab('coupons')}
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition flex items-center space-x-2 ${
+                activeTab === 'coupons'
+                  ? 'bg-white text-brand-blue shadow'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Percent className="w-4 h-4 text-brand-green" />
+              <span>Coupons ({coupons.length})</span>
+            </button>
           </div>
         </div>
 
@@ -700,6 +854,7 @@ export const AdminPage: React.FC = () => {
                       {/* Action */}
                       <td className="p-4 align-top">
                         <div className="space-y-2">
+                          {/* Order Status Badge */}
                           <span className={`inline-block px-2 py-1 rounded-md text-[10px] font-bold ${
                             order.orderStatus === 'DELIVERED' ? 'bg-brand-green/10 text-brand-green' :
                             order.orderStatus === 'SHIPPED' ? 'bg-brand-blue/10 text-brand-blue' :
@@ -708,16 +863,66 @@ export const AdminPage: React.FC = () => {
                           }`}>
                             {order.orderStatus || order.status}
                           </span>
-                          <button
-                            onClick={() => {
-                              setInspectOrder(order);
-                              setPendingStatus((order.orderStatus as Order['status']) || order.status || 'PLACED');
+
+                          {/* Payment Status Badge */}
+                          <span className={`block px-2 py-1 rounded-md text-[10px] font-bold ${
+                            (order as any).paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
+                            (order as any).paymentStatus === 'FAILED' ? 'bg-rose-100 text-rose-700' :
+                            (order as any).paymentStatus === 'CREDIT_PENDING' ? 'bg-purple-100 text-purple-700' :
+                            (order as any).paymentStatus === 'CREDIT_ISSUED' ? 'bg-teal-100 text-teal-700' :
+                            'bg-amber-100 text-amber-700'
+                          }`}>
+                            💳 {(order as any).paymentStatus || 'PENDING'}
+                          </span>
+
+                          {/* Verify Payment Button — only for UPI/RAZORPAY + not already PAID */}
+                          {order.paymentMethod !== '30_DAYS_CREDIT' && (order as any).paymentStatus !== 'PAID' && (
+                            <button
+                              onClick={() => {
+                                setPaymentVerifyOrder(order);
+                                setPaymentVerifyStatus('PAID');
+                                setPaymentVerifyNote('');
+                              }}
+                              className="w-full px-3 py-2 bg-brand-green text-white hover:bg-emerald-600 font-bold text-[11px] rounded-xl transition flex items-center justify-center space-x-1.5"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Verify Payment</span>
+                            </button>
+                          )}
+
+                          {/* Credit Release Button for org credit orders */}
+                          {order.paymentMethod === '30_DAYS_CREDIT' && (order as any).paymentStatus !== 'CREDIT_ISSUED' && (
+                            <button
+                              onClick={() => {
+                                setPaymentVerifyOrder(order);
+                                setPaymentVerifyStatus('CREDIT_ISSUED');
+                                setPaymentVerifyNote('');
+                              }}
+                              className="w-full px-3 py-2 bg-teal-600 text-white hover:bg-teal-700 font-bold text-[11px] rounded-xl transition flex items-center justify-center space-x-1.5"
+                            >
+                              <BadgeCheck className="w-3.5 h-3.5" />
+                              <span>Mark Credit Settled</span>
+                            </button>
+                          )}
+
+                          {/* Update Order Status */}
+                          <select
+                            value={order.orderStatus || 'PLACED'}
+                            onChange={async (e) => {
+                              try {
+                                await updateOrderStatus(order._id || order.id!, e.target.value as Order['status']);
+                                setAdminOrders(prev => prev.map(o => (o._id || o.id) === (order._id || order.id) ? { ...o, orderStatus: e.target.value } : o));
+                              } catch (err: any) {
+                                alert(err.message || 'Failed to update status');
+                              }
                             }}
-                            className="w-full px-3 py-2 bg-slate-900 text-white hover:bg-slate-800 font-bold text-[11px] rounded-xl transition flex items-center justify-center space-x-1.5"
+                            className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-semibold focus:ring-2 focus:ring-brand-blue outline-none"
                           >
-                            <Search className="w-3.5 h-3.5" />
-                            <span>View Details</span>
-                          </button>
+                            <option value="PLACED">PLACED</option>
+                            <option value="PROCESSING">PROCESSING</option>
+                            <option value="SHIPPED">SHIPPED</option>
+                            <option value="DELIVERED">DELIVERED</option>
+                          </select>
                         </div>
                       </td>
 
@@ -725,6 +930,109 @@ export const AdminPage: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Verification Modal */}
+        {paymentVerifyOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl relative space-y-5">
+              <button
+                onClick={() => setPaymentVerifyOrder(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div>
+                <h3 className="text-lg font-extrabold text-slate-900">Update Payment Status</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Order: <span className="font-mono font-bold text-brand-blue">{(paymentVerifyOrder as any).orderNumber || paymentVerifyOrder._id || paymentVerifyOrder.id}</span></p>
+              </div>
+
+              {/* Payment Info */}
+              <div className="bg-slate-50 rounded-2xl p-4 space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">Customer</span>
+                  <span className="font-bold text-slate-800">{paymentVerifyOrder.userId?.organization?.companyName || paymentVerifyOrder.userId?.individual?.name || paymentVerifyOrder.userId?.email || '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">Payment Method</span>
+                  <span className="font-bold text-slate-800">{paymentVerifyOrder.paymentMethod}</span>
+                </div>
+                {(paymentVerifyOrder as any).paymentTerm && (
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Payment Term</span>
+                    <span className="font-bold text-slate-800">{(paymentVerifyOrder as any).paymentTerm}</span>
+                  </div>
+                )}
+                {(paymentVerifyOrder as any).utrNumber && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium">UTR / Ref No.</span>
+                    <span className="font-mono font-extrabold text-brand-blue bg-blue-50 px-2 py-0.5 rounded">{(paymentVerifyOrder as any).utrNumber}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-slate-200 pt-2 mt-1">
+                  <span className="text-slate-500 font-medium">Grand Total</span>
+                  <span className="font-extrabold text-slate-900 text-sm">₹{paymentVerifyOrder.totalAmount?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">Advance Paid</span>
+                  <span className="font-bold text-emerald-600">₹{((paymentVerifyOrder as any).advancePaid || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500 font-medium">Remaining Balance</span>
+                  <span className="font-bold text-rose-500">₹{((paymentVerifyOrder as any).remainingBalance || 0).toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* New Status Select */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Set Payment Status To</label>
+                <select
+                  value={paymentVerifyStatus}
+                  onChange={e => setPaymentVerifyStatus(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-blue outline-none"
+                >
+                  <option value="PAID">✅ PAID — Full payment confirmed</option>
+                  <option value="FAILED">❌ FAILED — Payment not received / UTR invalid</option>
+                  <option value="PENDING_VERIFICATION">🔍 PENDING_VERIFICATION — Awaiting further check</option>
+                  <option value="CREDIT_ISSUED">🤝 CREDIT_ISSUED — Credit fully settled</option>
+                  <option value="CREDIT_PENDING">⏳ CREDIT_PENDING — Credit awaiting settlement</option>
+                </select>
+              </div>
+
+              {/* Admin Note */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-700">Admin Note <span className="text-slate-400 font-normal">(Optional)</span></label>
+                <input
+                  type="text"
+                  placeholder="e.g. UTR verified with bank statement"
+                  value={paymentVerifyNote}
+                  onChange={e => setPaymentVerifyNote(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-brand-blue outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  onClick={() => setPaymentVerifyOrder(null)}
+                  className="flex-1 py-2.5 border border-slate-200 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleUpdatePaymentStatus}
+                  disabled={savingPaymentStatus}
+                  className={`flex-1 py-2.5 rounded-2xl text-xs font-bold text-white transition ${
+                    paymentVerifyStatus === 'PAID' ? 'bg-brand-green hover:bg-emerald-600' :
+                    paymentVerifyStatus === 'FAILED' ? 'bg-rose-500 hover:bg-rose-600' :
+                    'bg-brand-blue hover:bg-brand-navy'
+                  } disabled:opacity-50`}
+                >
+                  {savingPaymentStatus ? 'Saving...' : 'Update Payment Status'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -1643,14 +1951,25 @@ export const AdminPage: React.FC = () => {
 
                   {/* Individual fields */}
                   {editingUser.accountType === 'INDIVIDUAL' && (
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600">Full Name</label>
-                      <input
-                        value={editUserName}
-                        onChange={e => setEditUserName(e.target.value)}
-                        className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-blue"
-                        placeholder="Full name"
-                      />
+                    <div className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-600">Full Name</label>
+                        <input
+                          value={editUserName}
+                          onChange={e => setEditUserName(e.target.value)}
+                          className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                          placeholder="Full name"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-600">Credit Eligible (50% Advance)</label>
+                        <button
+                          onClick={() => setEditUserCredit(v => !v)}
+                          className={`relative w-10 h-5 rounded-full transition-colors ${editUserCredit ? 'bg-brand-green' : 'bg-slate-300'}`}
+                        >
+                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${editUserCredit ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -1698,6 +2017,236 @@ export const AdminPage: React.FC = () => {
                       Save Changes
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 5: COUPONS */}
+        {activeTab === 'coupons' && (
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden space-y-4">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                  <Percent className="w-5 h-5 text-brand-green" />
+                  <span>Discount Coupons</span>
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">Create and manage discount codes for users.</p>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingCoupon(null);
+                  setCouponForm({
+                    code: '',
+                    discountPercentage: 0,
+                    maxUses: 100,
+                    conditionType: 'NONE',
+                    minOrderAmount: 0,
+                    productId: '',
+                    isActive: true
+                  });
+                  setShowCouponModal(true);
+                }}
+                className="flex items-center space-x-2 px-4 py-2 bg-brand-blue text-white rounded-xl text-xs font-bold hover:bg-brand-navy transition-colors"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Create Coupon</span>
+              </button>
+            </div>
+
+            <div className="overflow-x-auto p-6">
+              {loadingCoupons ? (
+                <div className="flex justify-center py-10">
+                  <div className="w-6 h-6 border-2 border-brand-blue border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : coupons.length === 0 ? (
+                <div className="text-center py-10">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+                    <Percent className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-600">No coupons created yet</p>
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Code</th>
+                      <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Discount</th>
+                      <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Usage</th>
+                      <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Condition</th>
+                      <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                      <th className="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {coupons.map(c => (
+                      <tr key={c._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                        <td className="py-4 px-4 text-sm font-bold text-brand-navy">{c.code}</td>
+                        <td className="py-4 px-4 text-xs font-semibold text-brand-green">{c.discountPercentage}%</td>
+                        <td className="py-4 px-4 text-xs font-medium text-slate-600">
+                          {c.usedCount} / {c.maxUses}
+                        </td>
+                        <td className="py-4 px-4 text-xs font-medium text-slate-600">
+                          {c.conditionType === 'NONE' ? 'No Condition' : 
+                           c.conditionType === 'MIN_ORDER_AMOUNT' ? `Min Order ₹${c.minOrderAmount}` : 
+                           'Specific Product'}
+                        </td>
+                        <td className="py-4 px-4">
+                          <button
+                            onClick={() => handleToggleCouponActive(c)}
+                            className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${c.isActive ? 'bg-brand-green/10 text-brand-green' : 'bg-slate-100 text-slate-500'}`}
+                          >
+                            {c.isActive ? 'Active' : 'Disabled'}
+                          </button>
+                        </td>
+                        <td className="py-4 px-4 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingCoupon(c);
+                              setCouponForm({
+                                code: c.code,
+                                discountPercentage: c.discountPercentage,
+                                maxUses: c.maxUses,
+                                conditionType: c.conditionType,
+                                minOrderAmount: c.minOrderAmount || 0,
+                                productId: c.productId || '',
+                                isActive: c.isActive
+                              });
+                              setShowCouponModal(true);
+                            }}
+                            className="p-1.5 text-brand-blue hover:bg-brand-blue/10 rounded"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCoupon(c._id)}
+                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* Coupon Modal */}
+            {showCouponModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4 relative">
+                  <button onClick={() => setShowCouponModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                    <X className="w-5 h-5" />
+                  </button>
+                  <h3 className="text-xl font-extrabold text-slate-900">
+                    {editingCoupon ? 'Edit Coupon' : 'Create Coupon'}
+                  </h3>
+                  
+                  <form onSubmit={handleSaveCoupon} className="space-y-4">
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 mb-1 block">Coupon Code</label>
+                      <input 
+                        type="text" 
+                        required
+                        value={couponForm.code}
+                        onChange={(e) => setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm uppercase font-bold focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none"
+                      />
+                    </div>
+                    
+                    <div className="flex space-x-4">
+                      <div className="flex-1">
+                        <label className="text-xs font-bold text-slate-600 mb-1 block">Discount (%)</label>
+                        <input 
+                          type="number" 
+                          required min="1" max="100"
+                          value={couponForm.discountPercentage}
+                          onChange={(e) => setCouponForm({ ...couponForm, discountPercentage: Number(e.target.value) })}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-brand-blue outline-none"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-xs font-bold text-slate-600 mb-1 block">Max Uses</label>
+                        <input 
+                          type="number" 
+                          required min="1"
+                          value={couponForm.maxUses}
+                          onChange={(e) => setCouponForm({ ...couponForm, maxUses: Number(e.target.value) })}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-brand-blue outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 mb-1 block">Condition</label>
+                      <select
+                        value={couponForm.conditionType}
+                        onChange={(e) => setCouponForm({ ...couponForm, conditionType: e.target.value as any })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-brand-blue outline-none"
+                      >
+                        <option value="NONE">No Condition (All Orders)</option>
+                        <option value="MIN_ORDER_AMOUNT">Minimum Order Amount</option>
+                        <option value="SPECIFIC_PRODUCT">Specific Product</option>
+                      </select>
+                    </div>
+
+                    {couponForm.conditionType === 'MIN_ORDER_AMOUNT' && (
+                      <div>
+                        <label className="text-xs font-bold text-slate-600 mb-1 block">Min Amount (₹)</label>
+                        <input 
+                          type="number" 
+                          required min="1"
+                          value={couponForm.minOrderAmount}
+                          onChange={(e) => setCouponForm({ ...couponForm, minOrderAmount: Number(e.target.value) })}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-brand-blue outline-none"
+                        />
+                      </div>
+                    )}
+
+                    {couponForm.conditionType === 'SPECIFIC_PRODUCT' && (
+                      <div>
+                        <label className="text-xs font-bold text-slate-600 mb-1 block">Select Product</label>
+                        <select
+                          required
+                          value={couponForm.productId}
+                          onChange={(e) => setCouponForm({ ...couponForm, productId: e.target.value })}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:border-brand-blue outline-none"
+                        >
+                          <option value="">-- Choose Product --</option>
+                          {products.map(p => (
+                            <option key={p.id} value={p.id}>{p.title}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="flex items-center space-x-2 pt-2">
+                      <input 
+                        type="checkbox"
+                        checked={couponForm.isActive}
+                        onChange={(e) => setCouponForm({ ...couponForm, isActive: e.target.checked })}
+                        className="w-4 h-4 rounded text-brand-blue"
+                      />
+                      <label className="text-sm font-medium text-slate-700">Active</label>
+                    </div>
+
+                    <div className="pt-4 flex gap-3">
+                      <button type="button" onClick={() => setShowCouponModal(false)} className="flex-1 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit" 
+                        disabled={savingCoupon}
+                        className="flex-1 py-2.5 bg-brand-blue text-white rounded-xl text-xs font-bold hover:bg-brand-navy transition disabled:opacity-50"
+                      >
+                        {savingCoupon ? 'Saving...' : 'Save Coupon'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             )}

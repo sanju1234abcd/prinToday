@@ -10,13 +10,16 @@ import {
   Building2,
   CheckCircle2,
   Lock,
-  MapPin
+  MapPin,
+  X
 } from 'lucide-react';
 import { fetchAddressFromLocation } from '../utils/location';
 import { useCart } from '../context/CartContext';
 import { useOrders } from '../context/OrderContext';
 import { useAuth } from '../context/AuthContext';
 import { ShippingAddress } from '../types';
+
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 
 export const CheckoutPage: React.FC = () => {
   const { cart, removeFromCart, updateQuantity, clearCart, cartSubtotal } = useCart();
@@ -37,8 +40,47 @@ export const CheckoutPage: React.FC = () => {
     pin: ''
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('UPI / Online Payment');
+  const [paymentMethod, setPaymentMethod] = useState('FULL');
+  const [utrNumber, setUtrNumber] = useState('');
+  const [showUpiModal, setShowUpiModal] = useState(false);
   const [locLoading, setLocLoading] = useState(false);
+
+  // Coupon State
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number; discountPercentage: number } | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setValidatingCoupon(true);
+    setCouponError('');
+    try {
+      const itemIds = cart.map(item => item.product._id || item.product.id);
+      const res = await fetch(`${API}/orders/validate-coupon`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code: couponCode, subtotal: cartSubtotal, itemIds })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Invalid coupon');
+      }
+      setAppliedCoupon(data.data);
+    } catch (err: any) {
+      setCouponError(err.message);
+      setAppliedCoupon(null);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setAppliedCoupon(null);
+    setCouponError('');
+  };
 
   const handleDetectLocation = async () => {
     setLocLoading(true);
@@ -87,24 +129,30 @@ export const CheckoutPage: React.FC = () => {
   }
 
   const paymentOptions: PaymentOption[] = [
-    { id: 'UPI / Online Payment', label: 'UPI / Online Payment', disabled: false },
-    { id: 'Credit / Debit Card', label: 'Credit / Debit Card', disabled: false },
-    { id: 'Net Banking', label: 'Net Banking', disabled: false }
+    { id: 'FULL', label: 'UPI / Online Payment (Full)', disabled: false }
   ];
+
+  if (user?.accountType === 'INDIVIDUAL' && user.individual?.creditEligible) {
+    paymentOptions.push({
+      id: '50_PERCENT_ADVANCE',
+      label: '30-Day Credit (50% Advance)',
+      disabled: false
+    });
+  }
 
   if (user?.accountType === 'ORGANIZATION') {
     const isEligible = !!user.organization?.creditEligible;
     paymentOptions.push({
-      id: '30 Days Credit (50% Advance)',
-      label: '30 Days Credit (50% Advance)',
+      id: 'ORG_CREDIT',
+      label: '30-Day Credit – Pay Later',
       disabled: !isEligible,
       message: !isEligible ? 'Action Required: Pending Admin Approval' : undefined
     });
   }
 
-  const gstAmount = Math.round(cartSubtotal * 0.18);
-  const shippingFee = cartSubtotal > 999 || cart.length === 0 ? 0 : 99;
-  const grandTotal = cartSubtotal + gstAmount + shippingFee;
+  const gstAmount = Math.round((cartSubtotal - (appliedCoupon?.discountAmount || 0)) * 0.18);
+  const shippingFee = (cartSubtotal - (appliedCoupon?.discountAmount || 0)) > 999 || cart.length === 0 ? 0 : 99;
+  const grandTotal = Math.max(0, cartSubtotal - (appliedCoupon?.discountAmount || 0)) + gstAmount + shippingFee;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -114,11 +162,28 @@ export const CheckoutPage: React.FC = () => {
     e.preventDefault();
     if (cart.length === 0) return;
 
-    // The backend uses 'COD', 'RAZORPAY', '30_DAYS_CREDIT'
-    const backendPaymentMethod = paymentMethod === '30 Days Credit (50% Advance)' ? '30_DAYS_CREDIT' : 'RAZORPAY';
+    if ((paymentMethod === 'FULL' || paymentMethod === '50_PERCENT_ADVANCE') && !showUpiModal) {
+      setShowUpiModal(true);
+      return;
+    }
+
+    if ((paymentMethod === 'FULL' || paymentMethod === '50_PERCENT_ADVANCE') && !utrNumber) {
+      alert("Please enter the UTR / Transaction Reference Number.");
+      return;
+    }
+
+    // backend paymentMethod enum is 'RAZORPAY', 'COD', '30_DAYS_CREDIT'
+    const backendPaymentMethod = paymentMethod === 'ORG_CREDIT' ? '30_DAYS_CREDIT' : 'RAZORPAY';
 
     try {
-      const createdOrder = await placeOrder(formData, cart, backendPaymentMethod);
+      const createdOrder = await placeOrder(
+        formData, 
+        cart, 
+        backendPaymentMethod, 
+        appliedCoupon?.code, 
+        paymentMethod, 
+        utrNumber
+      );
       clearCart();
       navigate('/order-success', { state: { order: createdOrder } });
     } catch (error: any) {
@@ -448,12 +513,67 @@ export const CheckoutPage: React.FC = () => {
                   ))}
                 </div>
 
+                {/* Coupon Section */}
+                <div className="pt-4 border-t border-slate-100">
+                  <h3 className="text-sm font-bold text-slate-900 mb-2">Have a coupon?</h3>
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between p-3 bg-brand-green/10 border border-brand-green/20 rounded-xl">
+                      <div>
+                        <p className="text-xs font-bold text-brand-green flex items-center">
+                          <CheckCircle2 className="w-4 h-4 mr-1" />
+                          Coupon '{appliedCoupon.code}' Applied
+                        </p>
+                        <p className="text-[10px] text-emerald-700 mt-0.5">
+                          {appliedCoupon.discountPercentage}% off your order!
+                        </p>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={handleRemoveCoupon}
+                        className="text-[10px] text-rose-500 hover:text-rose-700 font-bold underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex space-x-2">
+                        <input
+                          type="text"
+                          placeholder="Enter Coupon Code"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm uppercase placeholder:normal-case focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={!couponCode || validatingCoupon}
+                          className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                        >
+                          {validatingCoupon ? 'Applying...' : 'Apply'}
+                        </button>
+                      </div>
+                      {couponError && (
+                        <p className="text-[10px] text-rose-500 font-bold">{couponError}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Financial Summary */}
                 <div className="pt-4 border-t border-slate-100 space-y-2 text-xs">
                   <div className="flex justify-between text-slate-600">
                     <span>Subtotal</span>
                     <span className="font-semibold text-slate-900">₹{cartSubtotal.toLocaleString()}</span>
                   </div>
+
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-brand-green font-semibold">
+                      <span>Coupon Discount ({appliedCoupon.code})</span>
+                      <span>-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                    </div>
+                  )}
 
                   <div className="flex justify-between text-slate-600">
                     <span>GST (18% Input Tax Credit)</span>
@@ -481,7 +601,11 @@ export const CheckoutPage: React.FC = () => {
                   className="w-full py-4 bg-gradient-to-r from-brand-green to-emerald-600 hover:from-emerald-600 hover:to-brand-green text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-brand-green/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center space-x-2"
                 >
                   <ShieldCheck className="w-5 h-5" />
-                  <span>Place Order & Generate Receipt</span>
+                  <span>
+                    {paymentMethod === 'ORG_CREDIT' 
+                      ? 'Place Order on 30-Day Credit' 
+                      : 'Place Order & Generate Receipt'}
+                  </span>
                 </button>
 
               </div>
@@ -489,6 +613,66 @@ export const CheckoutPage: React.FC = () => {
             </div>
 
           </form>
+        )}
+
+        {/* UPI QR Modal */}
+        {showUpiModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl relative space-y-4">
+              <button 
+                type="button"
+                onClick={() => setShowUpiModal(false)} 
+                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="text-center space-y-1">
+                <h3 className="text-xl font-extrabold text-slate-900">Scan to Pay</h3>
+                <p className="text-xs text-slate-500 font-medium">PrinToday UPI Payment</p>
+              </div>
+
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col items-center justify-center">
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" 
+                  alt="UPI QR Code" 
+                  className="w-48 h-48 rounded-lg mb-4"
+                />
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">UPI ID</p>
+                <p className="text-sm font-extrabold text-brand-navy bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                  printoday@upi
+                </p>
+              </div>
+
+              <div className="text-center bg-brand-green/10 py-3 rounded-xl border border-brand-green/20">
+                <p className="text-[10px] font-bold text-brand-green uppercase tracking-wider mb-0.5">Amount to Pay</p>
+                <p className="text-2xl font-extrabold text-brand-green">
+                  ₹{(paymentMethod === '50_PERCENT_ADVANCE' ? Math.round(grandTotal * 0.5) : grandTotal).toLocaleString()}
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <label className="text-xs font-bold text-slate-700 block mb-1">Enter UTR / Reference No. <span className="text-rose-500">*</span></label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 301234567890"
+                  value={utrNumber}
+                  onChange={e => setUtrNumber(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold focus:ring-2 focus:ring-brand-blue outline-none"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSubmitOrder}
+                disabled={!utrNumber}
+                className="w-full py-3.5 bg-brand-blue text-white font-extrabold text-sm rounded-xl hover:bg-brand-navy transition-colors disabled:opacity-50"
+              >
+                I have Paid & Confirm Order
+              </button>
+            </div>
+          </div>
         )}
 
       </div>

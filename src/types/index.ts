@@ -123,6 +123,7 @@ export interface Order {
     accountType: 'INDIVIDUAL' | 'ORGANIZATION';
     individual?: {
       name: string;
+      creditEligible?: boolean;
     };
     organization?: {
       creditEligible: boolean;
@@ -141,7 +142,26 @@ export interface Order {
   paymentStatus?: string;
   createdAt: string;
   paymentMethod: string;
+  paymentTerm?: string;
+  advancePaid?: number;
+  remainingBalance?: number;
+  utrNumber?: string;
   expectedProcessingTime?: string;
   expectedShippingTime?: string;
   expectedDeliveryTime?: string;
+  couponCode?: string;
+  couponDiscountAmount?: number;
+}
+
+export interface Coupon {
+  _id: string;
+  code: string;
+  discountPercentage: number;
+  maxUses: number;
+  usedCount: number;
+  conditionType: 'MIN_ORDER_AMOUNT' | 'SPECIFIC_PRODUCT' | 'NONE';
+  minOrderAmount?: number;
+  productId?: string;
+  isActive: boolean;
+  createdAt: string;
 }

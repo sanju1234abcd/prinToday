@@ -83,7 +83,7 @@ export const Header: React.FC = () => {
                 aria-label="Shopping Cart"
               >
                 <ShoppingCart className="w-5 h-5 group-hover:scale-105 transition" />
-                {cartCount > 0 && (
+                {(user && cartCount > 0) && (
                   <span
                     ref={badgeRef}
                     className="absolute -top-1.5 -right-1.5 bg-brand-green text-white text-[10px] font-extrabold min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 shadow-md"
