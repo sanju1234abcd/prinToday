@@ -267,55 +267,23 @@ export const OrderDetailsPage: React.FC = () => {
               <CreditCard className="w-4 h-4 text-brand-blue" />
               <h3 className="text-sm font-bold text-slate-900">Payment Details</h3>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
                 <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold mb-0.5">Method</span>
-                <span className="font-semibold text-slate-800 text-sm">{order.paymentMethod}</span>
+                <span className="font-semibold text-slate-800 text-sm">
+                  {order.paymentMethod === 'OFFLINE' || order.paymentMethod === 'RAZORPAY' ? 'Manual / Offline Payment' : order.paymentMethod}
+                </span>
               </div>
-
-              {(order as any).paymentTerm && (
-                <div>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold mb-0.5">Payment Term</span>
-                  <span className="font-semibold text-slate-800 text-sm">
-                    {(order as any).paymentTerm === 'ORG_CREDIT' ? '30-Day Org Credit' :
-                     (order as any).paymentTerm === '50_PERCENT_ADVANCE' ? '30-Day Credit (50% Advance)' :
-                     'Full Payment'}
-                  </span>
-                </div>
-              )}
 
               <div>
                 <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold mb-0.5">Status</span>
                 <span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-extrabold ${
                   order.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
-                  order.paymentStatus === 'FAILED' ? 'bg-rose-100 text-rose-700' :
-                  order.paymentStatus === 'CREDIT_ISSUED' ? 'bg-teal-100 text-teal-700' :
-                  order.paymentStatus === 'CREDIT_PENDING' ? 'bg-purple-100 text-purple-700' :
                   'bg-amber-100 text-amber-700'
                 }`}>
-                  {order.paymentStatus || 'PENDING'}
+                  {order.paymentStatus === 'PAID' ? 'PAID' : 'PENDING'}
                 </span>
               </div>
-
-              {/* Show amount breakdown for credit orders */}
-              {((order as any).advancePaid !== undefined || (order as any).remainingBalance !== undefined) && (
-                <div className="bg-slate-50 rounded-xl p-3 space-y-2 text-xs border border-slate-100">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">Total Amount</span>
-                    <span className="font-extrabold text-slate-800">₹{order.totalAmount?.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">Advance Paid</span>
-                    <span className="font-bold text-emerald-600">₹{((order as any).advancePaid || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-slate-200 pt-2">
-                    <span className="text-slate-500 font-medium">Remaining Balance</span>
-                    <span className={`font-bold ${(order as any).remainingBalance > 0 ? 'text-rose-500' : 'text-emerald-600'}`}>
-                      ₹{((order as any).remainingBalance || 0).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              )}
 
               {(order as any).utrNumber && (
                 <div>

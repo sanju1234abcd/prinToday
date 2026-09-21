@@ -38,6 +38,7 @@ export const OrderSuccessPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Thank You for Your Order!
             </h1>
+            <span className="text-xs sm:text-sm text-slate-500 font-semibold">Our team will contact you for payment via WhatsApp/Call</span>
             <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
               Order <strong className="text-brand-blue font-mono">{order.id}</strong> has been received and queued for design proofing & printing.
             </p>

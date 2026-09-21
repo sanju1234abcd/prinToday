@@ -40,7 +40,6 @@ export const CheckoutPage: React.FC = () => {
     pin: ''
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('FULL');
   const [locLoading, setLocLoading] = useState(false);
 
   // Coupon State
@@ -118,38 +117,10 @@ export const CheckoutPage: React.FC = () => {
     }
   }, [user]);
 
-  // Payment constraints
-  interface PaymentOption {
-    id: string;
-    label: string;
-    disabled: boolean;
-    message?: string;
-  }
 
-  const paymentOptions: PaymentOption[] = [
-    { id: 'FULL', label: '100% Advance Payment', disabled: false }
-  ];
 
-  if (user?.accountType === 'INDIVIDUAL' && user.individual?.creditEligible) {
-    paymentOptions.push({
-      id: '50_PERCENT_ADVANCE',
-      label: '30-Day Credit (50% Advance)',
-      disabled: false
-    });
-  }
-
-  if (user?.accountType === 'ORGANIZATION') {
-    const isEligible = !!user.organization?.creditEligible;
-    paymentOptions.push({
-      id: 'ORG_CREDIT',
-      label: '30-Day Credit – Pay Later',
-      disabled: !isEligible,
-      message: !isEligible ? 'Action Required: Pending Admin Approval' : undefined
-    });
-  }
-
-  const gstAmount = Math.round((cartSubtotal - (appliedCoupon?.discountAmount || 0)) * 0.18);
-  const shippingFee = (cartSubtotal - (appliedCoupon?.discountAmount || 0)) > 999 || cart.length === 0 ? 0 : 99;
+  const gstAmount = 0; // GST calculation removed per user request
+  const shippingFee = 0; // Express priority shipping is free
   const grandTotal = Math.max(0, cartSubtotal - (appliedCoupon?.discountAmount || 0)) + gstAmount + shippingFee;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,16 +131,13 @@ export const CheckoutPage: React.FC = () => {
     e.preventDefault();
     if (cart.length === 0) return;
 
-    // backend paymentMethod enum is 'RAZORPAY', 'COD', '30_DAYS_CREDIT'
-    const backendPaymentMethod = paymentMethod === 'ORG_CREDIT' ? '30_DAYS_CREDIT' : 'RAZORPAY';
-
     try {
       const createdOrder = await placeOrder(
         formData, 
         cart, 
-        backendPaymentMethod, 
+        'OFFLINE', 
         appliedCoupon?.code, 
-        paymentMethod
+        'FULL'
       );
       clearCart();
       navigate('/order-success', { state: { order: createdOrder } });
@@ -378,46 +346,7 @@ export const CheckoutPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Payment Method Selector */}
-              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-md space-y-4">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center space-x-2 border-b border-slate-100 pb-3">
-                  <Lock className="w-5 h-5 text-brand-blue" />
-                  <span>2. Payment Option</span>
-                </h2>
 
-                <div className="space-y-2">
-                  {paymentOptions.map(option => (
-                    <label
-                      key={option.id}
-                      className={`p-3.5 rounded-xl border flex items-center justify-between transition text-xs font-bold ${
-                          option.disabled ? 'opacity-60 cursor-not-allowed border-slate-200 bg-slate-100 grayscale' :
-                          paymentMethod === option.id
-                          ? 'cursor-pointer border-brand-blue bg-brand-blue/5 text-brand-blue ring-2 ring-brand-blue/20'
-                          : 'cursor-pointer border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                        }`}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          disabled={option.disabled}
-                          checked={paymentMethod === option.id}
-                          onChange={() => !option.disabled && setPaymentMethod(option.id)}
-                          className="accent-brand-blue"
-                        />
-                        <div className="flex flex-col">
-                          <span className={option.disabled ? 'text-slate-500 line-through decoration-slate-300' : ''}>{option.label}</span>
-                          {option.message && (
-                            <span className="text-[10px] text-rose-500 font-bold mt-0.5 uppercase tracking-wider">{option.message}</span>
-                          )}
-                        </div>
-                      </div>
-                      {!option.disabled && <span className="text-[10px] text-brand-green font-semibold">100% Secure</span>}
-                      {option.disabled && <Lock className="w-3.5 h-3.5 text-slate-400" />}
-                    </label>
-                  ))}
-                </div>
-              </div>
 
             </div>
 
@@ -551,7 +480,7 @@ export const CheckoutPage: React.FC = () => {
                 {/* Financial Summary */}
                 <div className="pt-4 border-t border-slate-100 space-y-2 text-xs">
                   <div className="flex justify-between text-slate-600">
-                    <span>Subtotal</span>
+                    <span>Subtotal (including GST)</span>
                     <span className="font-semibold text-slate-900">₹{cartSubtotal.toLocaleString()}</span>
                   </div>
 
@@ -562,10 +491,7 @@ export const CheckoutPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-between text-slate-600">
-                    <span>GST (18% Input Tax Credit)</span>
-                    <span className="font-semibold text-slate-900">₹{gstAmount.toLocaleString()}</span>
-                  </div>
+
 
                   <div className="flex justify-between text-slate-600">
                     <span>Express Priority Shipping</span>
@@ -588,13 +514,9 @@ export const CheckoutPage: React.FC = () => {
                   className="w-full py-4 bg-gradient-to-r from-brand-green to-emerald-600 hover:from-emerald-600 hover:to-brand-green text-white font-extrabold text-sm rounded-2xl shadow-lg shadow-brand-green/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center space-x-2"
                 >
                   <ShieldCheck className="w-5 h-5" />
-                  <span>
-                    {paymentMethod === 'ORG_CREDIT' 
-                      ? 'Place Order on 30-Day Credit' 
-                      : 'Place Order'}
-                  </span>
+                  <span>Place Order</span>
                 </button>
-                <p className="text-[11px] text-center font-bold text-slate-500">
+                <p className="text-sm text-center font-bold text-slate-500">
                   Our team will contact you for payment via WhatsApp/Call.
                 </p>
               </div>

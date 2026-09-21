@@ -127,6 +127,25 @@ export const AdminPage: React.FC = () => {
     }
   };
 
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm("Are you sure you want to delete this order? This action cannot be undone and will reduce the user's pending order count.")) return;
+    
+    try {
+      const res = await fetch(`${API}/admin/orders/${orderId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || 'Failed to delete order');
+      }
+      setAdminOrders(prev => prev.filter(o => (o._id || o.id) !== orderId));
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   // Compute Filtered Orders
   const filteredOrders = adminOrders.filter(order => {
     let match = true;
@@ -867,16 +886,13 @@ export const AdminPage: React.FC = () => {
                           {/* Payment Status Badge */}
                           <span className={`block px-2 py-1 rounded-md text-[10px] font-bold ${
                             (order as any).paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
-                            (order as any).paymentStatus === 'FAILED' ? 'bg-rose-100 text-rose-700' :
-                            (order as any).paymentStatus === 'CREDIT_PENDING' ? 'bg-purple-100 text-purple-700' :
-                            (order as any).paymentStatus === 'CREDIT_ISSUED' ? 'bg-teal-100 text-teal-700' :
                             'bg-amber-100 text-amber-700'
                           }`}>
-                            💳 {(order as any).paymentStatus || 'PENDING'}
+                            💳 {(order as any).paymentStatus === 'PAID' ? 'PAID' : 'PENDING'}
                           </span>
 
-                          {/* Verify Payment Button — only for UPI/RAZORPAY + not already PAID */}
-                          {order.paymentMethod !== '30_DAYS_CREDIT' && (order as any).paymentStatus !== 'PAID' && (
+                          {/* Verify Payment Button — for any unpaid order */}
+                          {(order as any).paymentStatus !== 'PAID' && (
                             <button
                               onClick={() => {
                                 setPaymentVerifyOrder(order);
@@ -890,20 +906,14 @@ export const AdminPage: React.FC = () => {
                             </button>
                           )}
 
-                          {/* Credit Release Button for org credit orders */}
-                          {order.paymentMethod === '30_DAYS_CREDIT' && (order as any).paymentStatus !== 'CREDIT_ISSUED' && (
-                            <button
-                              onClick={() => {
-                                setPaymentVerifyOrder(order);
-                                setPaymentVerifyStatus('CREDIT_ISSUED');
-                                setPaymentVerifyNote('');
-                              }}
-                              className="w-full px-3 py-2 bg-teal-600 text-white hover:bg-teal-700 font-bold text-[11px] rounded-xl transition flex items-center justify-center space-x-1.5"
-                            >
-                              <BadgeCheck className="w-3.5 h-3.5" />
-                              <span>Mark Credit Settled</span>
-                            </button>
-                          )}
+                          {/* Delete Order Button */}
+                          <button
+                            onClick={() => handleDeleteOrder(order._id || order.id)}
+                            className="w-full px-3 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold text-[11px] rounded-xl transition flex items-center justify-center space-x-1.5 border border-rose-100"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete Order</span>
+                          </button>
 
                           {/* Update Order Status */}
                           <select

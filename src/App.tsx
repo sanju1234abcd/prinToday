@@ -7,6 +7,7 @@ import { CatalogProvider } from './context/CatalogContext';
 import { NoticeBar } from './components/NoticeBar';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { ScrollToTop } from './components/ScrollToTop';
 
 import { LandingPage } from './pages/LandingPage';
 import { SubcategoriesPage } from './pages/SubcategoriesPage';
@@ -27,6 +28,7 @@ export const App: React.FC = () => {
         <CatalogProvider>
           <CartProvider>
             <OrderProvider>
+              <ScrollToTop />
               <div className="flex flex-col min-h-screen">
                 <NoticeBar />
                 <Header />

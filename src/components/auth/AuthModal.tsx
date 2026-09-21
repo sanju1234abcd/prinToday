@@ -294,9 +294,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                           <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-brand-blue transition bg-slate-50">
                             <UploadCloud className="w-8 h-8 text-brand-blue mb-2" />
                             <span className="text-xs font-bold text-slate-600">{addressProofFile ? addressProofFile.name : 'Upload PDF / Image'}</span>
+                            <span className="text-[10px] text-slate-400 mt-1">Max file size: 2MB</span>
                             <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => {
                               if (e.target.files && e.target.files[0]) {
-                                setAddressProofFile(e.target.files[0]);
+                                const file = e.target.files[0];
+                                if (file.size > 2 * 1024 * 1024) {
+                                  setError('Address proof file must be under 2MB. Please compress and re-upload.');
+                                  e.target.value = '';
+                                  return;
+                                }
+                                setError('');
+                                setAddressProofFile(file);
                               }
                             }} />
                           </label>

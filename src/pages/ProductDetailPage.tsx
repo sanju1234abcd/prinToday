@@ -202,7 +202,7 @@ export const ProductDetailPage: React.FC = () => {
         return;
       }
 
-      const MAX_SIZE_MB = 18;
+      const MAX_SIZE_MB = 6;
       if (file.size > MAX_SIZE_MB * 1024 * 1024) {
         setValidationError(`Artwork file is too large. Maximum size is ${MAX_SIZE_MB} MB.`);
         e.target.value = '';
@@ -475,7 +475,7 @@ export const ProductDetailPage: React.FC = () => {
                     </button>
                   </div>
                 )}
-                <span className='text-sm text-slate-600'>Artwork not available? contact us for <a className='text-brand-blue font-bold' href="tel:9432954099">free design</a></span>
+                <span className='text-sm text-slate-600'>Artwork not available or file {'>'}6MB? Contact us at <a className='text-brand-blue font-bold' href="tel:9432954099">9432954099</a> for manual upload or free design</span>
               </div>
             )}
 
