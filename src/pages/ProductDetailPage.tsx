@@ -21,6 +21,7 @@ import { useCatalog } from '../context/CatalogContext';
 import { uploadToCloudinary } from '../utils/cloudinaryUpload';
 import { optimizeCloudinaryUrl } from '../utils/cloudinary';
 import { useCart } from '../context/CartContext';
+import { checkPendingOrderLimit } from '../utils/checkPendingOrderLimit';
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -279,6 +280,13 @@ export const ProductDetailPage: React.FC = () => {
     }
     setValidationError(null);
 
+    // Block if user already has 3 pending payment orders
+    const limitError = await checkPendingOrderLimit();
+    if (limitError) {
+      setValidationError(limitError);
+      return;
+    }
+
     let finalArtworkFile = artworkFile;
 
     // Upload to Cloudinary only on submit, not on file selection
@@ -322,6 +330,14 @@ export const ProductDetailPage: React.FC = () => {
       setValidationError(error);
       return;
     }
+
+    // Block if user already has 3 pending payment orders
+    const limitError = await checkPendingOrderLimit();
+    if (limitError) {
+      setValidationError(limitError);
+      return;
+    }
+
     await handleAddToCart();
     navigate('/checkout');
   };
